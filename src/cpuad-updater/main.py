@@ -1837,10 +1837,7 @@ def get_billing_backfill_window():
 
 def process_ai_credit_usage(github_org_manager, es_manager, data_seat_assignments):
     start_day, end_day = get_billing_backfill_window()
-    logger.info(
-        f"Processing AI credit usage from {start_day} to {end_day} "
-        f"for scope type {github_org_manager.scope_type}"
-    )
+    logger.info("Processing AI credit usage backfill")
     raw_records, user_daily_records = github_org_manager.get_ai_credit_usage_backfill(
         start_day, end_day, seat_assignments=data_seat_assignments
     )
