@@ -16,6 +16,18 @@
         "organization_slug" : {
           "type" : "keyword"
         },
+        "enterprise_slug" : {
+          "type" : "keyword"
+        },
+        "scope_slug" : {
+          "type" : "keyword"
+        },
+        "scope_type" : {
+          "type" : "keyword"
+        },
+        "slug_type" : {
+          "type" : "keyword"
+        },
         "seat_management_setting" : {
           "type" : "keyword"
         },

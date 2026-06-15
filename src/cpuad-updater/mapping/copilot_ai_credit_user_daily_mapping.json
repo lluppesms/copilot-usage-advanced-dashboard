@@ -1,0 +1,84 @@
+{
+  "mappings": {
+    "properties": {
+      "day": {
+        "type": "date"
+      },
+      "organization_slug": {
+        "type": "keyword"
+      },
+      "member_organization_slug": {
+        "type": "keyword"
+      },
+      "member_organization_id": {
+        "type": "keyword"
+      },
+      "enterprise_slug": {
+        "type": "keyword"
+      },
+      "scope_slug": {
+        "type": "keyword"
+      },
+      "scope_type": {
+        "type": "keyword"
+      },
+      "slug_type": {
+        "type": "keyword"
+      },
+      "user_login": {
+        "type": "keyword"
+      },
+      "user_id": {
+        "type": "keyword"
+      },
+      "assignee_team_slug": {
+        "type": "keyword"
+      },
+      "plan_type": {
+        "type": "keyword"
+      },
+      "quantity_raw": {
+        "type": "double"
+      },
+      "ai_credits_gross": {
+        "type": "double"
+      },
+      "ai_credits_discount": {
+        "type": "double"
+      },
+      "ai_credits_net": {
+        "type": "double"
+      },
+      "gross_amount": {
+        "type": "double"
+      },
+      "discount_amount": {
+        "type": "double"
+      },
+      "net_amount": {
+        "type": "double"
+      },
+      "has_usage": {
+        "type": "boolean"
+      },
+      "unique_hash": {
+        "type": "keyword"
+      },
+      "last_updated_at": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      }
+    }
+  },
+  "settings": {
+    "index": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    }
+  }
+}

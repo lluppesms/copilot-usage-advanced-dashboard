@@ -28,6 +28,24 @@
         "organization_slug" : {
           "type" : "keyword"
         },
+        "member_organization_slug" : {
+          "type" : "keyword"
+        },
+        "member_organization_id" : {
+          "type" : "keyword"
+        },
+        "enterprise_slug" : {
+          "type" : "keyword"
+        },
+        "scope_slug" : {
+          "type" : "keyword"
+        },
+        "scope_type" : {
+          "type" : "keyword"
+        },
+        "slug_type" : {
+          "type" : "keyword"
+        },
         "last_activity_editor" : {
           "type" : "keyword"
         },
