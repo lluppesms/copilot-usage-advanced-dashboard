@@ -1150,8 +1150,17 @@ class GitHubOrganizationManager:
                 # assignee sub dict
                 seat["assignee_login"] = seat.get("assignee", {}).get("login")
                 if not seat["assignee_login"]:
+                    placeholder_hash = generate_unique_hash(
+                        seat,
+                        key_properties=[
+                            "created_at",
+                            "updated_at",
+                            "pending_cancellation_date",
+                            "plan_type",
+                        ],
+                    )[:12]
                     seat["assignee_login"] = (
-                        f"unassigned-seat-{self.organization_slug}-{page}-{seat_index}"
+                        f"unassigned-seat-{placeholder_hash}"
                     )
                 # if organization_slug is CopilotNext, then assignee_login
                 if self.organization_slug == "CopilotNext":
@@ -1829,8 +1838,8 @@ def get_billing_backfill_window():
 def process_ai_credit_usage(github_org_manager, es_manager, data_seat_assignments):
     start_day, end_day = get_billing_backfill_window()
     logger.info(
-        f"Processing AI credit usage for {github_org_manager.slug_type}: "
-        f"{github_org_manager.organization_slug} from {start_day} to {end_day}"
+        f"Processing AI credit usage from {start_day} to {end_day} "
+        f"for scope type {github_org_manager.scope_type}"
     )
     raw_records, user_daily_records = github_org_manager.get_ai_credit_usage_backfill(
         start_day, end_day, seat_assignments=data_seat_assignments
