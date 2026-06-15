@@ -12,6 +12,7 @@
 - **[Version History](docs/version-history.md)**
 - [Online Demo Environment ✨](#online-demo-environment)
 - [🚀 Quick Start - How to run locally](./docs/run-locally.md)
+- [🧪 Testing Guide](./docs/testing-guide.md)
 - [Introduction](#introduction)
   - [Copilot Usage Advanced Dashboard](#copilot-usage-advanced-dashboard)
   - [Copilot Usage Advanced Dashboard Original](#copilot-usage-advanced-dashboard-original)
