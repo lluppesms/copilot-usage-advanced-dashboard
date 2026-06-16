@@ -1,7 +1,12 @@
 # Copilot Usage Advanced Dashboard Tutorial
 
-[repo-home]: https://github.com/satomic/copilot-usage-advanced-dashboard
-[repo-issues]: https://github.com/satomic/copilot-usage-advanced-dashboard/issues/new
+[repo-home]: https://github.com/lluppesms/copilot-usage-advanced-dashboard
+[repo-issues]: https://github.com/lluppesms/copilot-usage-advanced-dashboard/issues/new
+
+<!-- 
+[fork-from-repo-home]: https://github.com/satomic/copilot-usage-advanced-dashboard
+[fork-from-repo-issues]: https://github.com/satomic/copilot-usage-advanced-dashboard/issues/new 
+-->
 
 > ⚠️**Disclaimer**: This project is open sourced to solve problems that are critical to some users, and the functions provided may not be natively provided by GitHub Copilot. Therefore the contents,  opinions and views expressed in this project are solely mine do not necessarly refect the views of my employer, These are my personal notes based on myunderstanding of the code and trial deployments to GitHub Copilot. If anything is wrong with this article, please let me know through the [issues][repo-issues]. l appreciate your help in correcting my understanding.
 
