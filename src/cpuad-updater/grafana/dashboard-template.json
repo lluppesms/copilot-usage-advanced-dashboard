@@ -7941,7 +7941,25 @@
                 "unit": "none",
                 "decimals": 2
               },
-              "overrides": []
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "user_login"
+                  },
+                  "properties": [
+                    {
+                      "id": "links",
+                      "value": [
+                        {
+                          "title": "View ${__value.text} Daily Tokens",
+                          "url": "/d/copilot-usage-advanced-dashboard/copilot-usage-advanced-dashboard?from=${__from}&to=${__to}&var-user_filter=${__value.raw}&viewPanel=218"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             },
             "gridPos": {
               "h": 8,
@@ -7987,7 +8005,7 @@
                     "type": "sum"
                   }
                 ],
-                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${user_filter:lucene}) AND has_usage:true",
                 "refId": "A",
                 "timeField": "day"
               }
@@ -8390,7 +8408,7 @@
                     "type": "sum"
                   }
                 ],
-                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${user_filter}) AND has_usage:true",
                 "refId": "A",
                 "timeField": "day"
               }
@@ -8592,23 +8610,28 @@
         },
         {
           "current": {
-            "text": "__none__",
-            "value": "__none__"
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
           },
-          "hide": 2,
-          "includeAll": false,
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "elasticsearch-token-user-daily-uid"
+          },
+          "definition": "{\"find\": \"terms\", \"field\": \"user_login.keyword\", \"query\": \"has_usage:true\"}",
+          "hide": 0,
+          "includeAll": true,
           "label": "User Filter",
+          "multi": true,
           "name": "user_filter",
-          "options": [
-            {
-              "selected": true,
-              "text": "__none__",
-              "value": "__none__"
-            }
-          ],
-          "query": "__none__",
+          "options": [],
+          "query": "{\"find\": \"terms\", \"field\": \"user_login.keyword\", \"query\": \"has_usage:true\"}",
+          "refresh": 2,
+          "regex": "",
           "skipUrlSync": false,
-          "type": "textbox"
+          "type": "query",
+          "allValue": "*"
         }
       ]
     },
