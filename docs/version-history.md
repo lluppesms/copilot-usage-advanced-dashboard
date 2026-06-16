@@ -13,3 +13,4 @@
 |1.7|[Add Elasticsearch authentication](https://github.com/satomic/copilot-usage-advanced-dashboard/pull/19)|20250411|
 |1.8|**User Metrics Analytics Module**: Added 5th data source with user adoption leaderboard, Top 10 visualization, hourly automation, and production-ready deployment|20251120|
 |1.9|**Update User Metrics, Docs, and Deploys**: Updated user specific metrics; improved Adoption Scoring; updated `azd up` deployment process|20260323|
+|1.10|**Usage-Based Billing Analytics**: Added AI Credits and Token Usage dashboard tabs, with per-user AI credit consumption and prompt/output token volume by model, product/SKU, and day.|20260616|
