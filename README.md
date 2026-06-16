@@ -10,7 +10,7 @@
 ## Table of contents
 
 - **[Version History](docs/version-history.md)**
-- [Online Demo Environment ✨](#online-demo-environment)
+<!-- - [Online Demo Environment ✨](#online-demo-environment) -->
 - [🚀 Quick Start - How to run locally](./docs/run-locally.md)
 - [🧪 Testing Guide](./docs/testing-guide.md)
 - [Introduction](#introduction)
