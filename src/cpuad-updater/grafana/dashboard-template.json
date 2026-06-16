@@ -8352,7 +8352,24 @@
                 "unit": "none",
                 "decimals": 2
               },
-              "overrides": []
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byType",
+                    "options": "time"
+                  },
+                  "properties": [
+                    {
+                      "id": "displayName",
+                      "value": "Day"
+                    },
+                    {
+                      "id": "unit",
+                      "value": "time:ddd MMM DD"
+                    }
+                  ]
+                }
+              ]
             },
             "gridPos": {
               "h": 10,
@@ -8413,7 +8430,7 @@
                 "timeField": "day"
               }
             ],
-            "title": "User-by-Day Token Drilldown",
+            "title": "Token Usage by User by Day",
             "transformations": [
               {
                 "id": "organize",
