@@ -257,7 +257,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -345,7 +345,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -433,7 +433,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -550,7 +550,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -581,7 +581,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -620,7 +620,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -651,7 +651,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -690,7 +690,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -721,7 +721,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -977,7 +977,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -1007,7 +1007,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -1138,7 +1138,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -1168,7 +1168,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -3164,7 +3164,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3194,7 +3194,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -3281,7 +3281,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3369,7 +3369,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3576,7 +3576,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3664,7 +3664,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -3900,7 +3900,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3988,7 +3988,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -4330,7 +4330,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -4418,7 +4418,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -4883,7 +4883,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5001,7 +5001,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5119,7 +5119,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5161,7 +5161,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -5286,7 +5286,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5328,7 +5328,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -5453,7 +5453,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5495,7 +5495,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -5620,7 +5620,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5662,7 +5662,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -6842,7 +6842,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -6924,7 +6924,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -7006,7 +7006,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -7034,7 +7034,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -7149,7 +7149,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -7530,7 +7530,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   },
@@ -7989,7 +7989,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -8381,7 +8381,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   },
