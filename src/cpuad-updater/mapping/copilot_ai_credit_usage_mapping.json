@@ -1,0 +1,102 @@
+{
+  "mappings": {
+    "properties": {
+      "day": {
+        "type": "date"
+      },
+      "organization_slug": {
+        "type": "keyword"
+      },
+      "member_organization_slug": {
+        "type": "keyword"
+      },
+      "member_organization_id": {
+        "type": "keyword"
+      },
+      "enterprise_slug": {
+        "type": "keyword"
+      },
+      "scope_slug": {
+        "type": "keyword"
+      },
+      "scope_type": {
+        "type": "keyword"
+      },
+      "slug_type": {
+        "type": "keyword"
+      },
+      "user_login": {
+        "type": "keyword"
+      },
+      "user_id": {
+        "type": "keyword"
+      },
+      "product": {
+        "type": "keyword"
+      },
+      "sku": {
+        "type": "keyword"
+      },
+      "model": {
+        "type": "keyword"
+      },
+      "unit_type": {
+        "type": "keyword"
+      },
+      "price_per_unit": {
+        "type": "double"
+      },
+      "gross_quantity": {
+        "type": "double"
+      },
+      "gross_amount": {
+        "type": "double"
+      },
+      "discount_quantity": {
+        "type": "double"
+      },
+      "discount_amount": {
+        "type": "double"
+      },
+      "net_quantity": {
+        "type": "double"
+      },
+      "net_amount": {
+        "type": "double"
+      },
+      "quantity_raw": {
+        "type": "double"
+      },
+      "ai_credits_gross": {
+        "type": "double"
+      },
+      "ai_credits_discount": {
+        "type": "double"
+      },
+      "ai_credits_net": {
+        "type": "double"
+      },
+      "raw_item_index": {
+        "type": "integer"
+      },
+      "unique_hash": {
+        "type": "keyword"
+      },
+      "last_updated_at": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      }
+    }
+  },
+  "settings": {
+    "index": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    }
+  }
+}

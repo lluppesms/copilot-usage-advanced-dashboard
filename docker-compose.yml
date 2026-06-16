@@ -28,7 +28,8 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     volumes:
       - grafana:/var/lib/grafana
       - ./grafana-provisioning/dashboards:/var/lib/grafana/dashboards
@@ -52,9 +53,12 @@ services:
       context: ./src/cpuad-updater/grafana
     container_name: init-grafana
     depends_on:
-      - grafana
-      - elasticsearch
-      - cpuad-updater
+      grafana:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      cpuad-updater:
+        condition: service_started
     environment:
       ELASTICSEARCH_URL: http://elasticsearch:9200
       GRAFANA_URL: http://grafana:80
@@ -69,7 +73,8 @@ services:
       context: ./src/cpuad-updater
     container_name: cpuad-updater
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     environment:
       GITHUB_PAT: ${GITHUB_PAT}
       ORGANIZATION_SLUGS: ${ORGANIZATION_SLUGS:-standalone:octodemo-copilot-standalone}

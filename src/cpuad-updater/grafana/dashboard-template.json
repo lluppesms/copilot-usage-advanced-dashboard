@@ -257,7 +257,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -345,7 +345,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -433,7 +433,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -550,7 +550,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -581,7 +581,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -620,7 +620,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -651,7 +651,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -690,7 +690,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -721,7 +721,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -977,7 +977,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -1007,7 +1007,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -1138,7 +1138,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -1168,7 +1168,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -3164,7 +3164,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3194,7 +3194,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -3281,7 +3281,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3369,7 +3369,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3576,7 +3576,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3664,7 +3664,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -3900,7 +3900,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -3988,7 +3988,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -4330,7 +4330,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -4418,7 +4418,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -4883,7 +4883,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5001,7 +5001,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5119,7 +5119,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5161,7 +5161,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -5286,7 +5286,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5328,7 +5328,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -5453,7 +5453,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5495,7 +5495,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -5620,7 +5620,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto",
+                      "calendar_interval": "day",
                       "min_doc_count": "0",
                       "timeZone": "utc",
                       "trimEdges": "0"
@@ -5662,7 +5662,7 @@
                     "field": "day",
                     "id": "2",
                     "settings": {
-                      "interval": "auto"
+                      "calendar_interval": "day"
                     },
                     "type": "date_histogram"
                   }
@@ -6773,6 +6773,1681 @@
         ],
         "title": "User Metrics",
         "type": "row"
+      },
+      {
+        "collapsed": true,
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 25
+        },
+        "id": 110,
+        "panels": [
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-ai-credit-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "none",
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 6,
+              "w": 6,
+              "x": 0,
+              "y": 26
+            },
+            "id": 111,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "horizontal",
+              "reduceOptions": {
+                "calcs": [
+                  "sum"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "textMode": "auto"
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "calendar_interval": "day"
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-ai-credit-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "ai_credits_gross",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Total AI Credits",
+            "type": "stat"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-ai-credit-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "none",
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 6,
+              "w": 6,
+              "x": 6,
+              "y": 26
+            },
+            "id": 112,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "none",
+              "justifyMode": "auto",
+              "orientation": "horizontal",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "textMode": "auto"
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "calendar_interval": "day"
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-ai-credit-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "user_login",
+                    "id": "1",
+                    "type": "cardinality"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Active Credit Users",
+            "type": "stat"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-ai-credit-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "none",
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 6,
+              "w": 6,
+              "x": 12,
+              "y": 26
+            },
+            "id": 113,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "none",
+              "justifyMode": "auto",
+              "orientation": "horizontal",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "textMode": "auto"
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "calendar_interval": "day"
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-ai-credit-user-daily-uid"
+                },
+                "hide": true,
+                "metrics": [
+                  {
+                    "field": "ai_credits_gross",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              },
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "calendar_interval": "day"
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-ai-credit-user-daily-uid"
+                },
+                "hide": true,
+                "metrics": [
+                  {
+                    "field": "user_login",
+                    "id": "1",
+                    "type": "cardinality"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "B",
+                "timeField": "day"
+              },
+              {
+                "datasource": {
+                  "name": "Expression",
+                  "type": "__expr__",
+                  "uid": "__expr__"
+                },
+                "expression": "$A / ($B + ($B == 0))",
+                "refId": "C",
+                "type": "math"
+              }
+            ],
+            "title": "Avg Credits per Active User",
+            "type": "stat"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-ai-credit-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisBorderShow": false,
+                  "axisCenteredZero": false,
+                  "axisColorMode": "text",
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "lineInterpolation": "linear",
+                  "lineWidth": 2,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": false,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 32
+            },
+            "id": 114,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom",
+                "showLegend": true
+              },
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              }
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "AI Credits",
+                "bucketAggs": [
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "calendar_interval": "day"
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-ai-credit-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "ai_credits_gross",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Daily AI Credits Trend",
+            "type": "timeseries"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-ai-credit-usage-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 32
+            },
+            "id": 115,
+            "options": {
+              "displayLabels": [
+                "name",
+                "percent"
+              ],
+              "legend": {
+                "displayMode": "list",
+                "placement": "right",
+                "showLegend": true
+              },
+              "pieType": "pie",
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              }
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "model",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "10"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-ai-credit-usage-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "ai_credits_gross",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND user_login:(${assignee_login:lucene})",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Credits by Model",
+            "type": "piechart"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-ai-credit-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisBorderShow": false,
+                  "axisCenteredZero": false,
+                  "axisColorMode": "text",
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "fillOpacity": 80,
+                  "gradientMode": "none",
+                  "lineWidth": 1,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  },
+                  "lineInterpolation": "linear",
+                  "pointSize": 5,
+                  "showPoints": "auto"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 12,
+              "x": 0,
+              "y": 40
+            },
+            "id": 116,
+            "options": {
+              "legend": {
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true
+              },
+              "orientation": "horizontal",
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              },
+              "xField": "user_login"
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "user_login",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "10"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-ai-credit-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "ai_credits_gross",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Top Users by Credits",
+            "type": "barchart"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-ai-credit-usage-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "align": "auto",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "inspect": false
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 12,
+              "x": 12,
+              "y": 40
+            },
+            "id": 117,
+            "options": {
+              "footer": {
+                "countRows": false,
+                "fields": "",
+                "reducer": [
+                  "sum"
+                ],
+                "show": false
+              },
+              "showHeader": true
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "product",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "10"
+                    },
+                    "type": "terms"
+                  },
+                  {
+                    "field": "sku",
+                    "id": "3",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "_term",
+                      "size": "10"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-ai-credit-usage-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "ai_credits_gross",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND user_login:(${assignee_login:lucene})",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Credits by Product/SKU",
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "renameByName": {
+                    "product": "Product",
+                    "sku": "SKU",
+                    "Sum of ai_credits_gross": "Credits"
+                  }
+                }
+              }
+            ],
+            "type": "table"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-ai-credit-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "align": "auto",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "inspect": false
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 24,
+              "x": 0,
+              "y": 50
+            },
+            "id": 118,
+            "options": {
+              "footer": {
+                "countRows": false,
+                "fields": "",
+                "reducer": [
+                  "sum"
+                ],
+                "show": false
+              },
+              "showHeader": true
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "user_login",
+                    "id": "3",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "100"
+                    },
+                    "type": "terms"
+                  },
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "interval": "1d"
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-ai-credit-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "ai_credits_gross",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "User-by-Day Credit Drilldown",
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "renameByName": {
+                    "user_login": "User",
+                    "day": "Day",
+                    "Sum of ai_credits_gross": "Credits"
+                  }
+                }
+              }
+            ],
+            "type": "table"
+          }
+        ],
+        "title": "AI Credits",
+        "type": "row"
+      },
+      {
+        "collapsed": true,
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 26
+        },
+        "id": 210,
+        "panels": [
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-token-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "locale",
+                "decimals": 2,
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 6,
+              "w": 6,
+              "x": 0,
+              "y": 26
+            },
+            "id": 211,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "horizontal",
+              "reduceOptions": {
+                "calcs": [
+                  "sum"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "textMode": "auto"
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "organization_slug",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "1"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-token-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "token_total_million",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Total Tokens (Millions)",
+            "type": "stat"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-token-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "none",
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 6,
+              "w": 6,
+              "x": 6,
+              "y": 26
+            },
+            "id": 212,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "none",
+              "justifyMode": "auto",
+              "orientation": "horizontal",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "textMode": "auto"
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "organization_slug",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "1"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-token-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "user_login",
+                    "id": "1",
+                    "type": "cardinality"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Active Token Users",
+            "type": "stat"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-token-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "none",
+                "decimals": 2,
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 6,
+              "w": 6,
+              "x": 12,
+              "y": 26
+            },
+            "id": 213,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "none",
+              "justifyMode": "auto",
+              "orientation": "horizontal",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "textMode": "auto"
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "organization_slug",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "1"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-token-user-daily-uid"
+                },
+                "hide": true,
+                "metrics": [
+                  {
+                    "field": "token_total_million",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              },
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "organization_slug",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "1"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-token-user-daily-uid"
+                },
+                "hide": true,
+                "metrics": [
+                  {
+                    "field": "user_login",
+                    "id": "1",
+                    "type": "cardinality"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "B",
+                "timeField": "day"
+              },
+              {
+                "datasource": {
+                  "name": "Expression",
+                  "type": "__expr__",
+                  "uid": "__expr__"
+                },
+                "expression": "$A / ($B + ($B == 0))",
+                "refId": "C",
+                "type": "math"
+              }
+            ],
+            "title": "Avg Tokens per Active User (M)",
+            "type": "stat"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-token-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisBorderShow": false,
+                  "axisCenteredZero": false,
+                  "axisColorMode": "text",
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "lineInterpolation": "linear",
+                  "lineWidth": 2,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": false,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none",
+                "decimals": 2
+              },
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "user_login"
+                  },
+                  "properties": [
+                    {
+                      "id": "links",
+                      "value": [
+                        {
+                          "title": "View ${__value.text} Daily Tokens",
+                          "url": "/d/copilot-usage-advanced-dashboard/copilot-usage-advanced-dashboard?from=${__from}&to=${__to}&var-user_filter=${__value.raw}&viewPanel=218"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 32
+            },
+            "id": 214,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom",
+                "showLegend": true
+              },
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              }
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "Tokens",
+                "bucketAggs": [
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "calendar_interval": "day"
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-token-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "token_total_million",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${user_filter:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Daily Token Usage Trend",
+            "type": "timeseries"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-token-usage-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "unit": "locale",
+                "decimals": 0,
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 32
+            },
+            "id": 215,
+            "options": {
+              "displayLabels": [
+                "name",
+                "percent"
+              ],
+              "legend": {
+                "displayMode": "table",
+                "placement": "right",
+                "showLegend": true,
+                "sortBy": "Value",
+                "sortDesc": true,
+                "values": ["percent"]
+              },
+              "pieType": "pie",
+              "reduceOptions": {
+                "calcs": ["lastNotNull"],
+                "fields": "",
+                "values": true
+              },
+              "tooltip": {
+                "mode": "multi",
+                "sort": "desc"
+              }
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "model",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "10"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-token-usage-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "token_total_million",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Tokens by Model",
+            "type": "piechart"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-token-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisBorderShow": false,
+                  "axisCenteredZero": false,
+                  "axisColorMode": "text",
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "fillOpacity": 80,
+                  "gradientMode": "none",
+                  "lineWidth": 1,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  },
+                  "lineInterpolation": "linear",
+                  "pointSize": 5,
+                  "showPoints": "auto"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none",
+                "decimals": 2
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 12,
+              "x": 0,
+              "y": 40
+            },
+            "id": 216,
+            "options": {
+              "legend": {
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true
+              },
+              "orientation": "horizontal",
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              },
+              "xField": "user_login"
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "user_login",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "10"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-token-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "token_total_million",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Top Users by Tokens",
+            "type": "barchart"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-token-usage-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "align": "auto",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "inspect": false
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none",
+                "decimals": 2
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 12,
+              "x": 12,
+              "y": 40
+            },
+            "id": 217,
+            "fieldConfig": {
+              "defaults": {
+                "unit": "locale",
+                "decimals": 2
+              },
+              "overrides": []
+            },
+            "options": {
+              "footer": {
+                "countRows": false,
+                "fields": "",
+                "reducer": [
+                  "sum"
+                ],
+                "show": false
+              },
+              "showHeader": true
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "model",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "10"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-token-usage-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "token_total_million",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND user_login:(${assignee_login:lucene}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Tokens by Model (Millions)",
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {
+                    "Sum of token_total": true
+                  },
+                  "renameByName": {
+                    "model": "Model",
+                    "Sum of token_total_million": "Tokens (M)"
+                  }
+                }
+              }
+            ],
+            "type": "table"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-token-user-daily-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "align": "auto",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "inspect": false
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none",
+                "decimals": 2
+              },
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byType",
+                    "options": "time"
+                  },
+                  "properties": [
+                    {
+                      "id": "displayName",
+                      "value": "Day"
+                    },
+                    {
+                      "id": "unit",
+                      "value": "time:ddd MMM DD"
+                    }
+                  ]
+                }
+              ]
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 24,
+              "x": 0,
+              "y": 50
+            },
+            "id": 218,
+            "options": {
+              "footer": {
+                "countRows": false,
+                "fields": "",
+                "reducer": [
+                  "sum"
+                ],
+                "show": false
+              },
+              "showHeader": true
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "user_login",
+                    "id": "3",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "100"
+                    },
+                    "type": "terms"
+                  },
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "interval": "1d"
+                    },
+                    "type": "date_histogram"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-token-user-daily-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "token_total_million",
+                    "id": "1",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${user_filter}) AND has_usage:true",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Token Usage by User by Day",
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "renameByName": {
+                    "user_login": "User",
+                    "day": "Day",
+                    "Sum of token_total_million": "Tokens (M)"
+                  }
+                }
+              }
+            ],
+            "type": "table"
+          }
+        ],
+        "title": "Token Usage",
+        "type": "row"
       }
     ],
     "preload": false,
@@ -6952,23 +8627,28 @@
         },
         {
           "current": {
-            "text": "__none__",
-            "value": "__none__"
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
           },
-          "hide": 2,
-          "includeAll": false,
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "elasticsearch-token-user-daily-uid"
+          },
+          "definition": "{\"find\": \"terms\", \"field\": \"user_login.keyword\", \"query\": \"has_usage:true\"}",
+          "hide": 0,
+          "includeAll": true,
           "label": "User Filter",
+          "multi": true,
           "name": "user_filter",
-          "options": [
-            {
-              "selected": true,
-              "text": "__none__",
-              "value": "__none__"
-            }
-          ],
-          "query": "__none__",
+          "options": [],
+          "query": "{\"find\": \"terms\", \"field\": \"user_login.keyword\", \"query\": \"has_usage:true\"}",
+          "refresh": 2,
+          "regex": "",
           "skipUrlSync": false,
-          "type": "textbox"
+          "type": "query",
+          "allValue": "*"
         }
       ]
     },
@@ -7028,6 +8708,30 @@
         "type": "datasource",
         "pluginId": "elasticsearch",
         "value": "elasticsearch-user-metrics-top-by-day-uid"
+      },
+      {
+        "name": "elasticsearch-ai-credit-usage",
+        "type": "datasource",
+        "pluginId": "elasticsearch",
+        "value": "elasticsearch-ai-credit-usage-uid"
+      },
+      {
+        "name": "elasticsearch-ai-credit-user-daily",
+        "type": "datasource",
+        "pluginId": "elasticsearch",
+        "value": "elasticsearch-ai-credit-user-daily-uid"
+      },
+      {
+        "name": "elasticsearch-token-usage",
+        "type": "datasource",
+        "pluginId": "elasticsearch",
+        "value": "elasticsearch-token-usage-uid"
+      },
+      {
+        "name": "elasticsearch-token-user-daily",
+        "type": "datasource",
+        "pluginId": "elasticsearch",
+        "value": "elasticsearch-token-user-daily-uid"
       }
     ],
     "description": "For tutorials and feedback, visit the repo Copilot Usage Advanced Dashboard."

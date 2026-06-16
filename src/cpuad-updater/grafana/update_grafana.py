@@ -328,6 +328,26 @@ def add_grafana_data_sources(grafana_token, max_retries=3, retry_interval=5):
             "name": "elasticsearch-user-adoption",
             "index": "copilot_user_adoption",
         },
+        {
+            "name": "elasticsearch-ai-credit-usage",
+            "index": os.getenv("INDEX_AI_CREDIT_USAGE", "copilot_ai_credit_usage"),
+        },
+        {
+            "name": "elasticsearch-ai-credit-user-daily",
+            "index": os.getenv(
+                "INDEX_AI_CREDIT_USER_DAILY", "copilot_ai_credit_user_daily"
+            ),
+        },
+        {
+            "name": "elasticsearch-token-usage",
+            "index": os.getenv("INDEX_TOKEN_USAGE", "copilot_token_usage"),
+        },
+        {
+            "name": "elasticsearch-token-user-daily",
+            "index": os.getenv(
+                "INDEX_TOKEN_USER_DAILY", "copilot_token_user_daily"
+            ),
+        },
     ]
 
     # Template for the payload
@@ -418,6 +438,10 @@ def generate_grafana_model(grafana_token):
         "elasticsearch-user-metrics-top-by-day",
         "elasticsearch-user-metrics-summary",
         "elasticsearch-user-adoption",
+        "elasticsearch-ai-credit-usage",
+        "elasticsearch-ai-credit-user-daily",
+        "elasticsearch-token-usage",
+        "elasticsearch-token-user-daily",
     ]
 
 

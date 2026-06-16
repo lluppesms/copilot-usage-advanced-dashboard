@@ -51,9 +51,12 @@ docker-compose up -d
 | Variable | Required | Description | Default |
 |----------|----------|-------------|---------|  
 | `GITHUB_PAT` | ✅ Yes | GitHub Personal Access Token | - |
-| `ORGANIZATION_SLUGS` | ✅ Yes | Comma-separated org slugs | - |
+| `ORGANIZATION_SLUGS` | Optional | Comma-separated org slugs for org-scoped ingestion | - |
+| `ENTERPRISE_SLUGS` | Optional | Comma-separated enterprise slugs for enterprise billing ingestion | - |
 | `ELASTICSEARCH_URL` | No | Elasticsearch endpoint | `http://elasticsearch:9200` |
 | `EXECUTION_INTERVAL_HOURS` | No | Data fetch frequency (hours) | `1` |
+| `GITHUB_API_VERSION` | No | GitHub REST API version header | `2026-03-10` |
+| `BILLING_BACKFILL_START_DATE` | No | AI credit billing backfill start date | `2026-06-01` |
 | `INDEX_USER_METRICS` | No | User metrics index name | `copilot_user_metrics` |
 | `INDEX_USER_ADOPTION` | No | Adoption leaderboard index | `copilot_user_adoption` |
 

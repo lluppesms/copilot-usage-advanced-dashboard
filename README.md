@@ -12,6 +12,7 @@
 - **[Version History](docs/version-history.md)**
 - [Online Demo Environment ✨](#online-demo-environment)
 - [🚀 Quick Start - How to run locally](./docs/run-locally.md)
+- [🧪 Testing Guide](./docs/testing-guide.md)
 - [Introduction](#introduction)
   - [Copilot Usage Advanced Dashboard](#copilot-usage-advanced-dashboard)
   - [Copilot Usage Advanced Dashboard Original](#copilot-usage-advanced-dashboard-original)
@@ -28,6 +29,8 @@
   - [9. Copilot Seat Info & Top Languages](#9-copilot-seat-info--top-languages)
   - [10. Copilot Usage Total Insight](#10-copilot-usage-total-insight)
   - [11. Copilot Usage Breakdown Insight](#11-copilot-usage-breakdown-insight)
+  - [12. AI Credits (Usage-Based Billing)](#12-ai-credits-usage-based-billing)
+  - [13. Token Usage](#13-token-usage)
 - [Deployment Methods](#deployment-methods)
   - [Deploy from workstation with `azd up`](./docs/azd-up-guide.md)
   - [Deploy with an Azure DevOps Pipeline](./docs/azdo-pipeline-guide.md)
@@ -290,6 +293,37 @@ You can analyze the total number of recommendations and adoption rate trends bas
 You can analyze the effect of Copilot in different languages ​​and different editor combinations.
 
 ![Dashboard Image](image/image_RJ6lvMkZlP.png)
+
+### 12. AI Credits (Usage-Based Billing)
+
+> **NEW in v1.10**: Usage-Based Billing (UBB) analytics that surface **per-user AI credit consumption** instead of monetary cost. Data is ingested from the GitHub billing API into the `copilot_ai_credit_usage` (line-item grain) and `copilot_ai_credit_user_daily` (daily per-user rollup) Elasticsearch indexes. Historical backfill is controlled by `BILLING_BACKFILL_START_DATE`.
+
+This row shows how AI credits are being consumed across organizations, models, and products so you can understand adoption and consumption patterns under the UBB model.
+
+- **Total AI Credits** = `sum(ai_credits_net)` - Net AI credits consumed across the selected time range
+- **Active Credit Users** = `cardinality(user_login)` - Unique users with AI credit consumption
+- **Avg Credits per Active User** = `sum(ai_credits_net) / cardinality(user_login)`
+- **Daily AI Credits Trend** = `sum(ai_credits_net)` per day - Time-series of credit consumption
+- **Credits by Model** = `sum(ai_credits_net).groupby(model)` - Consumption split across models
+- **Top Users by Credits** = `sum(ai_credits_net).groupby(user_login)` - Leaderboard of heaviest credit consumers
+- **Credits by Product/SKU** = `sum(ai_credits_net).groupby(sku)` - Consumption split across Copilot products
+- **User-by-Day Credit Drilldown** - Per-user daily breakdown for detailed investigation
+
+### 13. Token Usage
+
+> **NEW in v1.10**: Token-level analytics derived from user metrics, stored in the `copilot_token_usage` and `copilot_token_user_daily` Elasticsearch indexes. Prompt and output token volume is allocated by model and language so you can see where token spend is concentrated.
+
+This row complements AI Credits by showing the raw **prompt** and **output** token volume behind Copilot activity, reported in millions for readability.
+
+- **Total Tokens (Millions)** = `sum(token_total_million)` - Combined prompt + output tokens
+- **Active Token Users** = `cardinality(user_login)` - Unique users generating token activity
+- **Avg Tokens per Active User (M)** = `sum(token_total_million) / cardinality(user_login)`
+- **Daily Token Usage Trend** = `sum(token_total)` per day - Time-series of token consumption
+- **Tokens by Model** / **Tokens by Model (Millions)** = `sum(token_total).groupby(model)` - Consumption split across models
+- **Top Users by Tokens** = `sum(token_total).groupby(user_login)` - Leaderboard of heaviest token consumers
+- **Token Usage by User by Day** - Per-user daily prompt/output/total token breakdown
+
+![Dashboard Image](image/token-usage.png)
 
 ---
 

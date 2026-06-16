@@ -4,7 +4,7 @@ import os
 import hashlib
 import math
 from elasticsearch import Elasticsearch, NotFoundError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from log_utils import configure_logger, current_time
 import time
 from metrics_2_usage_convertor import convert_metrics_to_usage
@@ -91,6 +91,11 @@ class Paras:
     # GitHub
     github_pat = os.getenv("GITHUB_PAT")
     organization_slugs = os.getenv("ORGANIZATION_SLUGS")
+    enterprise_slugs = os.getenv("ENTERPRISE_SLUGS", "")
+    github_api_version = os.getenv("GITHUB_API_VERSION", "2026-03-10")
+    billing_backfill_start_date = os.getenv(
+        "BILLING_BACKFILL_START_DATE", "2026-06-01"
+    )
 
     # ElasticSearch
     primary_key = os.getenv("PRIMARY_KEY", "unique_hash")
@@ -123,19 +128,29 @@ class Indexes:
     index_name_dotcom_chat = os.getenv("INDEX_NAME_DOTCOM_CHAT", "copilot_dotcom_chat")
     index_user_metrics = os.getenv("INDEX_USER_METRICS", "copilot_user_metrics")
     index_user_adoption = os.getenv("INDEX_USER_ADOPTION", "copilot_user_adoption")
+    index_ai_credit_usage = os.getenv(
+        "INDEX_AI_CREDIT_USAGE", "copilot_ai_credit_usage"
+    )
+    index_ai_credit_user_daily = os.getenv(
+        "INDEX_AI_CREDIT_USER_DAILY", "copilot_ai_credit_user_daily"
+    )
+    index_token_usage = os.getenv("INDEX_TOKEN_USAGE", "copilot_token_usage")
+    index_token_user_daily = os.getenv(
+        "INDEX_TOKEN_USER_DAILY", "copilot_token_user_daily"
+    )
 
 
 logger = configure_logger(log_path=Paras.log_path)
 logger.info("-----------------Starting-----------------")
 
 
-# Validate github_pat and organization_slugs, if not present, log an error and exit
+# Validate github_pat and scope slugs, if not present, log an error and exit
 if not Paras.github_pat:
     logger.error("GitHub PAT not found, exiting...")
     exit(1)
 
-if not Paras.organization_slugs:
-    logger.error("Organization slugs not found, exiting...")
+if not Paras.organization_slugs and not Paras.enterprise_slugs:
+    logger.error("No organization or enterprise slugs found, exiting...")
     exit(1)
 
 
@@ -143,8 +158,8 @@ def github_api_request_handler(url, error_return_value=[]):
     logger.info(f"Requesting URL: {url}")
     headers = {
         "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": Paras.github_api_version,
         "Authorization": f"Bearer {Paras.github_pat}",
-        "X-GitHub-Api-Version": "2022-11-28",
     }
     
     try:
@@ -196,6 +211,452 @@ def generate_unique_hash(data, key_properties=[]):
     key_string = "-".join(key_elements)
     unique_hash = hashlib.sha256(key_string.encode()).hexdigest()
     return unique_hash
+
+
+def split_csv_env(value):
+    if not value:
+        return []
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def parse_iso_date(value):
+    if isinstance(value, date):
+        return value
+    if not value:
+        return None
+    return datetime.strptime(str(value)[:10], "%Y-%m-%d").date()
+
+
+def iter_days(start_day, end_day):
+    current_day = start_day
+    while current_day <= end_day:
+        yield current_day
+        current_day += timedelta(days=1)
+
+
+def normalize_scope_type(slug_type):
+    slug_type_lower = (slug_type or "").lower()
+    if slug_type_lower == "enterprise":
+        return "enterprise"
+    if slug_type_lower == "standalone":
+        return "standalone"
+    return "organization"
+
+
+def get_billing_api_segment(scope_type):
+    return "enterprises" if scope_type in {"enterprise", "standalone"} else "organizations"
+
+
+def extract_login(entity):
+    if isinstance(entity, dict):
+        return entity.get("login") or entity.get("name") or entity.get("username")
+    if isinstance(entity, str):
+        return entity
+    return None
+
+
+def extract_id(entity):
+    if isinstance(entity, dict):
+        return entity.get("id")
+    return None
+
+
+def normalize_billing_usage_item(
+    item, day_value, scope_slug, scope_type, slug_type, item_index
+):
+    user_login = (
+        extract_login(item.get("user"))
+        or item.get("user_login")
+        or item.get("userName")
+        or item.get("username")
+    )
+    member_organization_slug = (
+        extract_login(item.get("organization"))
+        or item.get("organization_slug")
+        or item.get("organizationName")
+    )
+    if scope_type == "organization":
+        member_organization_slug = member_organization_slug or scope_slug
+
+    normalized = {
+        "day": day_value.isoformat(),
+        "organization_slug": scope_slug,
+        "member_organization_slug": member_organization_slug,
+        "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+        "scope_slug": scope_slug,
+        "scope_type": scope_type,
+        "slug_type": slug_type,
+        "user_login": user_login,
+        "user_id": extract_id(item.get("user")) or item.get("user_id"),
+        "member_organization_id": extract_id(item.get("organization"))
+        or item.get("organization_id"),
+        "product": item.get("product"),
+        "sku": item.get("sku"),
+        "model": item.get("model"),
+        "unit_type": item.get("unitType") or item.get("unit_type"),
+        "price_per_unit": item.get("pricePerUnit"),
+        "gross_quantity": item.get("grossQuantity", 0),
+        "gross_amount": item.get("grossAmount", 0),
+        "discount_quantity": item.get("discountQuantity", 0),
+        "discount_amount": item.get("discountAmount", 0),
+        "net_quantity": item.get("netQuantity", 0),
+        "net_amount": item.get("netAmount", 0),
+        "quantity_raw": item.get("netQuantity", item.get("grossQuantity", 0)),
+        "ai_credits_gross": item.get("grossQuantity", 0),
+        "ai_credits_discount": item.get("discountQuantity", 0),
+        "ai_credits_net": item.get("netQuantity", 0),
+        "raw_item_index": item_index,
+    }
+    normalized["unique_hash"] = generate_unique_hash(
+        normalized,
+        key_properties=[
+            "scope_slug",
+            "day",
+            "user_login",
+            "member_organization_slug",
+            "product",
+            "sku",
+            "model",
+            "unit_type",
+            "raw_item_index",
+        ],
+    )
+    return normalized
+
+
+def seat_is_in_pool_for_day(seat, day_value):
+    created_at = parse_iso_date(seat.get("created_at"))
+    pending_cancellation_date = parse_iso_date(seat.get("pending_cancellation_date"))
+    if created_at and created_at > day_value:
+        return False
+    if pending_cancellation_date and pending_cancellation_date <= day_value:
+        return False
+    return True
+
+
+def build_billing_user_daily_records(
+    raw_records, seat_assignments, start_day, end_day, scope_slug, scope_type, slug_type
+):
+    aggregated = {}
+
+    for record in raw_records:
+        user_login = record.get("user_login")
+        if not user_login:
+            continue
+        record_day = record.get("day")
+        key = (record_day, user_login)
+        entry = aggregated.setdefault(
+            key,
+            {
+                "day": record_day,
+                "organization_slug": scope_slug,
+                "member_organization_slug": record.get("member_organization_slug"),
+                "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+                "scope_slug": scope_slug,
+                "scope_type": scope_type,
+                "slug_type": slug_type,
+                "user_login": user_login,
+                "user_id": record.get("user_id"),
+                "member_organization_id": record.get("member_organization_id"),
+                "assignee_team_slug": "no-team",
+                "plan_type": None,
+                "quantity_raw": 0,
+                "ai_credits_gross": 0,
+                "ai_credits_discount": 0,
+                "ai_credits_net": 0,
+                "gross_amount": 0,
+                "discount_amount": 0,
+                "net_amount": 0,
+                "has_usage": False,
+            },
+        )
+        entry["has_usage"] = True
+        entry["quantity_raw"] += record.get("quantity_raw", 0) or 0
+        entry["ai_credits_gross"] += record.get("ai_credits_gross", 0) or 0
+        entry["ai_credits_discount"] += record.get("ai_credits_discount", 0) or 0
+        entry["ai_credits_net"] += record.get("ai_credits_net", 0) or 0
+        entry["gross_amount"] += record.get("gross_amount", 0) or 0
+        entry["discount_amount"] += record.get("discount_amount", 0) or 0
+        entry["net_amount"] += record.get("net_amount", 0) or 0
+
+    for day_value in iter_days(start_day, end_day):
+        day_str = day_value.isoformat()
+        seen_users = set()
+        for seat in seat_assignments:
+            user_login = seat.get("assignee_login")
+            if not user_login or user_login.startswith("unassigned-seat-"):
+                continue
+            if not seat_is_in_pool_for_day(seat, day_value):
+                continue
+            if user_login in seen_users:
+                continue
+            seen_users.add(user_login)
+            key = (day_str, user_login)
+            entry = aggregated.setdefault(
+                key,
+                {
+                    "day": day_str,
+                    "organization_slug": scope_slug,
+                    "member_organization_slug": seat.get("member_organization_slug"),
+                    "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+                    "scope_slug": scope_slug,
+                    "scope_type": scope_type,
+                    "slug_type": slug_type,
+                    "user_login": user_login,
+                    "user_id": None,
+                    "member_organization_id": seat.get("member_organization_id"),
+                    "assignee_team_slug": seat.get("assignee_team_slug", "no-team"),
+                    "plan_type": seat.get("plan_type"),
+                    "quantity_raw": 0,
+                    "ai_credits_gross": 0,
+                    "ai_credits_discount": 0,
+                    "ai_credits_net": 0,
+                    "gross_amount": 0,
+                    "discount_amount": 0,
+                    "net_amount": 0,
+                    "has_usage": False,
+                },
+            )
+            entry["member_organization_slug"] = (
+                entry.get("member_organization_slug")
+                or seat.get("member_organization_slug")
+            )
+            entry["member_organization_id"] = (
+                entry.get("member_organization_id")
+                or seat.get("member_organization_id")
+            )
+            entry["assignee_team_slug"] = seat.get("assignee_team_slug", "no-team")
+            entry["plan_type"] = entry.get("plan_type") or seat.get("plan_type")
+
+    for entry in aggregated.values():
+        entry["unique_hash"] = generate_unique_hash(
+            entry,
+            key_properties=["scope_slug", "day", "user_login"],
+        )
+
+    return list(aggregated.values())
+
+
+def distribute_weighted_int(total, weighted_keys):
+    """Distribute an integer total across weighted keys while preserving sums."""
+    if total <= 0 or not weighted_keys:
+        return {k: 0 for k, _ in weighted_keys}
+
+    allocations = {}
+    remainders = []
+    allocated = 0
+    for key, weight in weighted_keys:
+        raw = total * float(weight)
+        value = int(raw)
+        allocations[key] = value
+        allocated += value
+        remainders.append((raw - value, key))
+
+    remainder = total - allocated
+    if remainder > 0:
+        remainders.sort(reverse=True)
+        idx = 0
+        while remainder > 0 and remainders:
+            _, key = remainders[idx % len(remainders)]
+            allocations[key] += 1
+            remainder -= 1
+            idx += 1
+
+    return allocations
+
+
+def build_token_usage_records_from_user_metrics(
+    user_metrics_data,
+    seat_assignments,
+    start_day,
+    end_day,
+    scope_slug,
+    scope_type,
+    slug_type,
+):
+    raw_records = []
+    raw_item_index = 0
+
+    for record in user_metrics_data or []:
+        day_value = parse_iso_date(record.get("day"))
+        if not day_value:
+            continue
+
+        day_str = day_value.isoformat()
+        user_login = record.get("user_login")
+        if not user_login:
+            continue
+
+        token_usage = (record.get("totals_by_cli") or {}).get("token_usage") or {}
+        prompt_tokens = int(token_usage.get("prompt_tokens_sum", 0) or 0)
+        output_tokens = int(token_usage.get("output_tokens_sum", 0) or 0)
+        total_tokens = prompt_tokens + output_tokens
+        if total_tokens <= 0:
+            continue
+
+        language_model_entries = record.get("totals_by_language_model") or []
+        weight_entries = []
+        for entry in language_model_entries:
+            model = entry.get("model", "unknown")
+            language = entry.get("language", "unknown")
+            weight = int(entry.get("code_generation_activity_count", 0) or 0)
+            if weight > 0:
+                weight_entries.append(((model, language), weight))
+
+        if not weight_entries:
+            fallback_model = record.get("top_model", "unknown")
+            fallback_language = record.get("top_language", "unknown")
+            weight_entries = [((fallback_model, fallback_language), 1)]
+
+        total_weight = sum(weight for _, weight in weight_entries) or 1
+        weighted_keys = [(key, weight / total_weight) for key, weight in weight_entries]
+
+        prompt_alloc = distribute_weighted_int(prompt_tokens, weighted_keys)
+        output_alloc = distribute_weighted_int(output_tokens, weighted_keys)
+        total_alloc = distribute_weighted_int(total_tokens, weighted_keys)
+
+        for (model, language), _ in weight_entries:
+            raw_item_index += 1
+            token_prompt = int(prompt_alloc.get((model, language), 0) or 0)
+            token_output = int(output_alloc.get((model, language), 0) or 0)
+            token_total = int(total_alloc.get((model, language), 0) or 0)
+            if token_total <= 0:
+                continue
+
+            raw_record = {
+                "day": day_str,
+                "organization_slug": scope_slug,
+                "member_organization_slug": record.get("organization_slug") or scope_slug,
+                "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+                "scope_slug": scope_slug,
+                "scope_type": scope_type,
+                "slug_type": slug_type,
+                "user_login": user_login,
+                "user_id": record.get("user_id"),
+                "member_organization_id": record.get("organization_id") or record.get("enterprise_id"),
+                "assignee_team_slug": record.get("assignee_team_slug", "no-team"),
+                "product": "Copilot",
+                "sku": "Copilot Token Usage",
+                "model": model,
+                "language": language,
+                "unit_type": "tokens",
+                "quantity_raw": token_total,
+                "token_prompt": token_prompt,
+                "token_output": token_output,
+                "token_total": token_total,
+                "token_prompt_million": round(token_prompt / 1_000_000, 6),
+                "token_output_million": round(token_output / 1_000_000, 6),
+                "token_total_million": round(token_total / 1_000_000, 6),
+                "has_usage": True,
+                "raw_item_index": raw_item_index,
+            }
+            raw_record["unique_hash"] = generate_unique_hash(
+                raw_record,
+                key_properties=[
+                    "scope_slug",
+                    "day",
+                    "user_login",
+                    "model",
+                    "language",
+                    "raw_item_index",
+                ],
+            )
+            raw_records.append(raw_record)
+
+    aggregated = {}
+    for record in raw_records:
+        key = (record.get("day"), record.get("user_login"))
+        entry = aggregated.setdefault(
+            key,
+            {
+                "day": record.get("day"),
+                "organization_slug": scope_slug,
+                "member_organization_slug": record.get("member_organization_slug"),
+                "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+                "scope_slug": scope_slug,
+                "scope_type": scope_type,
+                "slug_type": slug_type,
+                "user_login": record.get("user_login"),
+                "user_id": record.get("user_id"),
+                "member_organization_id": record.get("member_organization_id"),
+                "assignee_team_slug": record.get("assignee_team_slug", "no-team"),
+                "plan_type": None,
+                "quantity_raw": 0,
+                "token_prompt": 0,
+                "token_output": 0,
+                "token_total": 0,
+                "token_prompt_million": 0,
+                "token_output_million": 0,
+                "token_total_million": 0,
+                "has_usage": False,
+            },
+        )
+        entry["has_usage"] = True
+        entry["quantity_raw"] += record.get("quantity_raw", 0) or 0
+        entry["token_prompt"] += record.get("token_prompt", 0) or 0
+        entry["token_output"] += record.get("token_output", 0) or 0
+        entry["token_total"] += record.get("token_total", 0) or 0
+        entry["token_prompt_million"] = round(entry["token_prompt"] / 1_000_000, 6)
+        entry["token_output_million"] = round(entry["token_output"] / 1_000_000, 6)
+        entry["token_total_million"] = round(entry["token_total"] / 1_000_000, 6)
+
+    for day_value in iter_days(start_day, end_day):
+        day_str = day_value.isoformat()
+        seen_users = set()
+        for seat in seat_assignments or []:
+            user_login = seat.get("assignee_login")
+            if not user_login or user_login.startswith("unassigned-seat-"):
+                continue
+            if not seat_is_in_pool_for_day(seat, day_value):
+                continue
+            if user_login in seen_users:
+                continue
+            seen_users.add(user_login)
+            key = (day_str, user_login)
+            entry = aggregated.setdefault(
+                key,
+                {
+                    "day": day_str,
+                    "organization_slug": scope_slug,
+                    "member_organization_slug": seat.get("member_organization_slug"),
+                    "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+                    "scope_slug": scope_slug,
+                    "scope_type": scope_type,
+                    "slug_type": slug_type,
+                    "user_login": user_login,
+                    "user_id": None,
+                    "member_organization_id": seat.get("member_organization_id"),
+                    "assignee_team_slug": seat.get("assignee_team_slug", "no-team"),
+                    "plan_type": seat.get("plan_type"),
+                    "quantity_raw": 0,
+                    "token_prompt": 0,
+                    "token_output": 0,
+                    "token_total": 0,
+                    "token_prompt_million": 0,
+                    "token_output_million": 0,
+                    "token_total_million": 0,
+                    "has_usage": False,
+                },
+            )
+            entry["member_organization_slug"] = (
+                entry.get("member_organization_slug")
+                or seat.get("member_organization_slug")
+            )
+            entry["member_organization_id"] = (
+                entry.get("member_organization_id")
+                or seat.get("member_organization_id")
+            )
+            entry["assignee_team_slug"] = seat.get("assignee_team_slug", "no-team")
+            entry["plan_type"] = entry.get("plan_type") or seat.get("plan_type")
+
+    user_daily_records = list(aggregated.values())
+    for entry in user_daily_records:
+        entry["unique_hash"] = generate_unique_hash(
+            entry,
+            key_properties=["scope_slug", "day", "user_login"],
+        )
+
+    return raw_records, user_daily_records
 
 
 def _compute_percentile(sorted_values, percentile):
@@ -650,11 +1111,21 @@ class GitHubEnterpriseManager:
 
 class GitHubOrganizationManager:
 
-    def __init__(self, organization_slug, save_to_json=True, is_standalone=False):
-        self.slug_type = "Standalone" if is_standalone else "Organization"
+    def __init__(
+        self,
+        organization_slug,
+        save_to_json=True,
+        is_standalone=False,
+        fetch_teams=True,
+        slug_type_override=None,
+    ):
+        self.slug_type = slug_type_override or (
+            "Standalone" if is_standalone else "Organization"
+        )
+        self.scope_type = normalize_scope_type(self.slug_type)
         self.api_type = "enterprises" if is_standalone else "orgs"
         self.organization_slug = organization_slug
-        self.teams = self._fetch_all_teams(save_to_json=save_to_json)
+        self.teams = self._fetch_all_teams(save_to_json=save_to_json) if fetch_teams else []
         self.utc_offset = get_utc_offset()
         logger.info(
             f"Initialized GitHubOrganizationManager for {self.slug_type}: {organization_slug}"
@@ -749,19 +1220,23 @@ class GitHubOrganizationManager:
         return datas
 
     def get_seat_info_settings_standalone(self, save_to_json=True):
-        # only for Standalone
-        # todo: no API for Standalone, need to caculate the data from other APIs
+        # derived from seat assignment data for Standalone or Enterprise scopes
         url = f"https://api.github.com/{self.api_type}/{self.organization_slug}/copilot/billing/seats"
         data_seats = github_api_request_handler(url, error_return_value={})
         if not data_seats:
             return data_seats
 
+        plan_types = [
+            seat.get("plan_type")
+            for seat in data_seats.get("seats", [])
+            if seat.get("plan_type")
+        ]
         data = {
             "seat_management_setting": "assign_selected",
             "public_code_suggestions": "allow",
             "ide_chat": "enabled",
             "cli": "enabled",
-            "plan_type": "business",
+            "plan_type": plan_types[0] if plan_types else "enterprise",
             "seat_total": data_seats.get("total_seats", 0),
             "seat_added_this_cycle": 0,  # caculated
             "seat_pending_invitation": 0,  # always 0
@@ -802,9 +1277,14 @@ class GitHubOrganizationManager:
 
         # Inject organization_slug and today's date in the format 2024-12-15, and a hash value based on these two values
         data["organization_slug"] = self.organization_slug
+        data["scope_slug"] = self.organization_slug
+        data["scope_type"] = self.scope_type
+        data["slug_type"] = self.slug_type
+        if self.scope_type == "enterprise":
+            data["enterprise_slug"] = self.organization_slug
         data["day"] = current_time()[:10]
         data["unique_hash"] = generate_unique_hash(
-            data, key_properties=["organization_slug", "day"]
+            data, key_properties=["scope_slug", "day"]
         )
 
         dict_save_to_json_file(
@@ -863,9 +1343,12 @@ class GitHubOrganizationManager:
 
         # Inject organization_slug and today's date in the format 2024-12-15, and a hash value based on these two values
         data["organization_slug"] = self.organization_slug
+        data["scope_slug"] = self.organization_slug
+        data["scope_type"] = self.scope_type
+        data["slug_type"] = self.slug_type
         data["day"] = current_time()[:10]
         data["unique_hash"] = generate_unique_hash(
-            data, key_properties=["organization_slug", "day"]
+            data, key_properties=["scope_slug", "day"]
         )
 
         dict_save_to_json_file(
@@ -890,11 +1373,22 @@ class GitHubOrganizationManager:
             logger.info(f"Current page seats count: {len(seats)}")
             if not seats:
                 break
-            for seat in seats:
-                if not seat.get("assignee"):
-                    continue
+            for seat_index, seat in enumerate(seats, start=1):
                 # assignee sub dict
                 seat["assignee_login"] = seat.get("assignee", {}).get("login")
+                if not seat["assignee_login"]:
+                    placeholder_hash = generate_unique_hash(
+                        seat,
+                        key_properties=[
+                            "created_at",
+                            "updated_at",
+                            "pending_cancellation_date",
+                            "plan_type",
+                        ],
+                    )[:12]
+                    seat["assignee_login"] = (
+                        f"unassigned-seat-{placeholder_hash}"
+                    )
                 # if organization_slug is CopilotNext, then assignee_login
                 if self.organization_slug == "CopilotNext":
                     seat["assignee_login"] = "".join(
@@ -903,6 +1397,14 @@ class GitHubOrganizationManager:
 
                 seat["assignee_html_url"] = seat.get("assignee", {}).get("html_url")
                 seat.pop("assignee", None)
+
+                seat["member_organization_slug"] = seat.get("organization", {}).get(
+                    "login"
+                )
+                if not seat["member_organization_slug"] and self.scope_type == "organization":
+                    seat["member_organization_slug"] = self.organization_slug
+                seat["member_organization_id"] = seat.get("organization", {}).get("id")
+                seat.pop("organization", None)
 
                 # assigning_team sub dict
                 seat["assignee_team_slug"] = seat.get("assigning_team", {}).get(
@@ -914,12 +1416,28 @@ class GitHubOrganizationManager:
                 seat.pop("assigning_team", None)
 
                 seat["organization_slug"] = self.organization_slug
+                seat["scope_slug"] = self.organization_slug
+                seat["scope_type"] = self.scope_type
+                seat["slug_type"] = self.slug_type
+                if self.scope_type == "enterprise":
+                    seat["enterprise_slug"] = self.organization_slug
                 # seat['day'] = current_time()[:10] # 2025-04-02T08:00:00+08:00 seat['updated_at'][:10]
-                seat["day"] = datetime.now(
-                    datetime.strptime(seat["updated_at"], "%Y-%m-%dT%H:%M:%S%z").tzinfo
-                ).strftime("%Y-%m-%d %H:%M:%S.%f")[:10]
+                if seat.get("updated_at"):
+                    seat["day"] = datetime.now(
+                        datetime.strptime(
+                            seat["updated_at"], "%Y-%m-%dT%H:%M:%S%z"
+                        ).tzinfo
+                    ).strftime("%Y-%m-%d %H:%M:%S.%f")[:10]
+                else:
+                    seat["day"] = current_time()[:10]
                 seat["unique_hash"] = generate_unique_hash(
-                    seat, key_properties=["organization_slug", "assignee_login", "day"]
+                    seat,
+                    key_properties=[
+                        "scope_slug",
+                        "assignee_login",
+                        "member_organization_slug",
+                        "day",
+                    ],
                 )
 
                 last_activity_at = seat.get(
@@ -1204,6 +1722,57 @@ class GitHubOrganizationManager:
         logger.info(f"Processed {len(processed_data)} total user metrics records for {self.slug_type}: {self.organization_slug}")
         return processed_data
 
+    def get_ai_credit_usage_backfill(
+        self, start_day, end_day, seat_assignments=None, save_to_json=True
+    ):
+        raw_records = []
+        scope_segment = get_billing_api_segment(self.scope_type)
+        for day_value in iter_days(start_day, end_day):
+            url = (
+                f"https://api.github.com/{scope_segment}/{self.organization_slug}"
+                f"/settings/billing/ai_credit/usage?year={day_value.year}"
+                f"&month={day_value.month}&day={day_value.day}"
+            )
+            api_response = github_api_request_handler(url, error_return_value={})
+            usage_items = api_response.get("usageItems", []) if api_response else []
+            logger.info(
+                f"Fetched {len(usage_items)} AI credit usage items for "
+                f"{self.slug_type}: {self.organization_slug} on {day_value.isoformat()}"
+            )
+            for item_index, usage_item in enumerate(usage_items, start=1):
+                raw_records.append(
+                    normalize_billing_usage_item(
+                        usage_item,
+                        day_value,
+                        self.organization_slug,
+                        self.scope_type,
+                        self.slug_type,
+                        item_index,
+                    )
+                )
+
+        dict_save_to_json_file(
+            raw_records,
+            f"{self.organization_slug}_ai_credit_usage",
+            save_to_json=save_to_json,
+        )
+
+        user_daily_records = build_billing_user_daily_records(
+            raw_records,
+            seat_assignments or [],
+            start_day,
+            end_day,
+            self.organization_slug,
+            self.scope_type,
+            self.slug_type,
+        )
+        dict_save_to_json_file(
+            user_daily_records,
+            f"{self.organization_slug}_ai_credit_user_daily",
+            save_to_json=save_to_json,
+        )
+        return raw_records, user_daily_records
+
     def _add_fullpath_slug(self, teams):
         id_to_team = {team["id"]: team for team in teams}
 
@@ -1396,6 +1965,280 @@ class DataSplitter:
                 dotcom_chat_list.append(chat_entry_with_day)
         return dotcom_chat_list
 
+def build_usage_from_user_metrics(user_metrics_data, organization_slug, teams):
+    """Build usage-like records from user metrics when legacy /copilot/metrics is unavailable."""
+    if not user_metrics_data:
+        return {}
+
+    team_position_map = {"no-team": "root_team"}
+    for team in teams or []:
+        team_slug = team.get("slug")
+        if team_slug:
+            team_position_map[team_slug] = team.get("position_in_tree", "leaf_team")
+
+    groups = {}
+
+    def get_group(team_slug, day):
+        key = (team_slug, day)
+        if key not in groups:
+            groups[key] = {
+                "total_suggestions_count": 0,
+                "total_acceptances_count": 0,
+                "total_lines_suggested": 0,
+                "total_lines_accepted": 0,
+                "total_chat_acceptances": 0,
+                "total_chat_turns": 0,
+                "total_chat_copy_events": 0,
+                "total_chat_insertion_events": 0,
+                "total_pr_summaries_created": 0,
+                "active_users": set(),
+                "active_chat_users": set(),
+                "pr_engaged_users": set(),
+                "dotcom_chat_engaged_users": set(),
+                "breakdown": {},
+                "breakdown_users": {},
+                "breakdown_chat": {},
+                "breakdown_chat_users": {},
+                "pr_reviews": {},
+                "dotcom_chat": {},
+                "dotcom_chat_users_by_model": {},
+            }
+        return groups[key]
+
+    def distribute_int(total, weighted_keys):
+        """Distribute an integer total across weighted keys while preserving sums."""
+        if total <= 0 or not weighted_keys:
+            return {k: 0 for k, _ in weighted_keys}
+
+        allocations = {}
+        remainders = []
+        allocated = 0
+        for key, weight in weighted_keys:
+            raw = total * float(weight)
+            value = int(raw)
+            allocations[key] = value
+            allocated += value
+            remainders.append((raw - value, key))
+
+        remainder = total - allocated
+        if remainder > 0:
+            remainders.sort(reverse=True)
+            idx = 0
+            while remainder > 0 and remainders:
+                _, key = remainders[idx % len(remainders)]
+                allocations[key] += 1
+                remainder -= 1
+                idx += 1
+
+        return allocations
+
+    for record in user_metrics_data:
+        day = record.get("day")
+        if not day:
+            continue
+
+        team_slug = record.get("assignee_team_slug", "no-team") or "no-team"
+        user_login = record.get("user_login", "unknown")
+        group = get_group(team_slug, day)
+
+        generated = int(record.get("code_generation_activity_count", 0) or 0)
+        accepted = int(record.get("code_acceptance_activity_count", 0) or 0)
+        interactions = int(record.get("user_initiated_interaction_count", 0) or 0)
+        lines_suggested = int(record.get("loc_suggested_to_add_sum", 0) or 0)
+        lines_accepted = int(record.get("loc_added_sum", 0) or 0)
+
+        if generated > 0 or accepted > 0 or interactions > 0:
+            group["active_users"].add(user_login)
+
+        group["total_suggestions_count"] += generated
+        group["total_acceptances_count"] += accepted
+        group["total_lines_suggested"] += lines_suggested
+        group["total_lines_accepted"] += lines_accepted
+
+        editor_activity = {}
+        for ide_entry in record.get("totals_by_ide", []):
+            editor_name = ide_entry.get("ide", "unknown")
+            editor_weight = int(
+                ide_entry.get("code_generation_activity_count", 0)
+                or ide_entry.get("user_initiated_interaction_count", 0)
+                or 0
+            )
+            editor_activity[editor_name] = editor_activity.get(editor_name, 0) + max(
+                editor_weight, 0
+            )
+
+        if not editor_activity:
+            editor_activity = {"unknown": 1}
+
+        editor_weight_sum = sum(editor_activity.values()) or 1
+        editor_weights = [
+            (editor_name, activity / editor_weight_sum)
+            for editor_name, activity in editor_activity.items()
+        ]
+
+        for entry in record.get("totals_by_language_model", []):
+            language = entry.get("language", "others")
+            model = entry.get("model", "others")
+            b_generated = int(entry.get("code_generation_activity_count", 0) or 0)
+            b_accepted = int(entry.get("code_acceptance_activity_count", 0) or 0)
+            b_lines_suggested = int(entry.get("loc_suggested_to_add_sum", 0) or 0)
+            b_lines_accepted = int(entry.get("loc_added_sum", 0) or 0)
+
+            generated_by_editor = distribute_int(b_generated, editor_weights)
+            accepted_by_editor = distribute_int(b_accepted, editor_weights)
+            lines_suggested_by_editor = distribute_int(b_lines_suggested, editor_weights)
+            lines_accepted_by_editor = distribute_int(b_lines_accepted, editor_weights)
+
+            for editor_name, _ in editor_weights:
+                b_key = (language, editor_name, model)
+                if b_key not in group["breakdown"]:
+                    group["breakdown"][b_key] = {
+                        "language": language,
+                        "editor": editor_name,
+                        "model": model,
+                        "suggestions_count": 0,
+                        "acceptances_count": 0,
+                        "lines_suggested": 0,
+                        "lines_accepted": 0,
+                    }
+                    group["breakdown_users"][b_key] = set()
+
+                group["breakdown"][b_key]["suggestions_count"] += generated_by_editor.get(
+                    editor_name, 0
+                )
+                group["breakdown"][b_key]["acceptances_count"] += accepted_by_editor.get(
+                    editor_name, 0
+                )
+                group["breakdown"][b_key]["lines_suggested"] += lines_suggested_by_editor.get(
+                    editor_name, 0
+                )
+                group["breakdown"][b_key]["lines_accepted"] += lines_accepted_by_editor.get(
+                    editor_name, 0
+                )
+
+                if (
+                    generated_by_editor.get(editor_name, 0) > 0
+                    or accepted_by_editor.get(editor_name, 0) > 0
+                ):
+                    group["breakdown_users"][b_key].add(user_login)
+
+        for entry in record.get("totals_by_ide", []):
+            editor = entry.get("ide", "unknown")
+            model = "all-models"
+            c_key = (editor, model)
+
+            if c_key not in group["breakdown_chat"]:
+                group["breakdown_chat"][c_key] = {
+                    "editor": editor,
+                    "model": model,
+                    "chat_turns": 0,
+                    "chat_copy_events": 0,
+                    "chat_insertion_events": 0,
+                    "chat_acceptances": 0,
+                }
+                group["breakdown_chat_users"][c_key] = set()
+
+            chat_turns = int(entry.get("user_initiated_interaction_count", 0) or 0)
+            chat_acceptances = int(entry.get("code_acceptance_activity_count", 0) or 0)
+
+            group["breakdown_chat"][c_key]["chat_turns"] += chat_turns
+            group["breakdown_chat"][c_key]["chat_acceptances"] += chat_acceptances
+
+            if chat_turns > 0:
+                group["active_chat_users"].add(user_login)
+                group["breakdown_chat_users"][c_key].add(user_login)
+
+            group["total_chat_turns"] += chat_turns
+            group["total_chat_acceptances"] += chat_acceptances
+
+        for entry in record.get("totals_by_model_feature", []):
+            feature = str(entry.get("feature", "")).lower()
+            model = entry.get("model", "others")
+            event_count = int(entry.get("user_initiated_interaction_count", 0) or 0) + int(
+                entry.get("code_generation_activity_count", 0) or 0
+            )
+
+            if event_count <= 0:
+                continue
+
+            if "dotcom" in feature and "chat" in feature:
+                group["dotcom_chat"][model] = group["dotcom_chat"].get(model, 0) + event_count
+                if model not in group["dotcom_chat_users_by_model"]:
+                    group["dotcom_chat_users_by_model"][model] = set()
+                group["dotcom_chat_users_by_model"][model].add(user_login)
+                group["dotcom_chat_engaged_users"].add(user_login)
+
+            if "pr" in feature or "pull" in feature:
+                pr_key = ("all-repositories", model)
+                group["pr_reviews"][pr_key] = group["pr_reviews"].get(pr_key, 0) + event_count
+                group["pr_engaged_users"].add(user_login)
+                group["total_pr_summaries_created"] += event_count
+
+    usage_by_team = {}
+    for (team_slug, day), group in groups.items():
+        entry = {
+            "day": day,
+            "total_suggestions_count": group["total_suggestions_count"],
+            "total_acceptances_count": group["total_acceptances_count"],
+            "total_lines_suggested": group["total_lines_suggested"],
+            "total_lines_accepted": group["total_lines_accepted"],
+            "total_active_users": len(group["active_users"]),
+            "total_chat_acceptances": group["total_chat_acceptances"],
+            "total_chat_turns": group["total_chat_turns"],
+            "total_active_chat_users": len(group["active_chat_users"]),
+            "total_chat_copy_events": group["total_chat_copy_events"],
+            "total_chat_insertion_events": group["total_chat_insertion_events"],
+            "total_pr_summaries_created": group["total_pr_summaries_created"],
+            "total_pr_engaged_users": len(group["pr_engaged_users"]),
+            "total_dotcom_chat_engaged_users": len(group["dotcom_chat_engaged_users"]),
+            "breakdown": [],
+            "breakdown_chat": [],
+            "pr_reviews": [],
+            "dotcom_chat": [],
+        }
+
+        for key, value in group["breakdown"].items():
+            value["active_users"] = len(group["breakdown_users"].get(key, set()))
+            entry["breakdown"].append(value)
+
+        for key, value in group["breakdown_chat"].items():
+            value["active_users"] = len(group["breakdown_chat_users"].get(key, set()))
+            entry["breakdown_chat"].append(value)
+
+        for (repository, model), pr_count in group["pr_reviews"].items():
+            entry["pr_reviews"].append(
+                {
+                    "repository": repository,
+                    "model": model,
+                    "pr_summaries_created": pr_count,
+                }
+            )
+
+        for model, chat_turns in group["dotcom_chat"].items():
+            entry["dotcom_chat"].append(
+                {
+                    "model": model,
+                    "chat_turns": chat_turns,
+                    "active_users": len(
+                        group["dotcom_chat_users_by_model"].get(model, set())
+                    ),
+                }
+            )
+
+        if team_slug not in usage_by_team:
+            usage_by_team[team_slug] = {
+                "position_in_tree": team_position_map.get(team_slug, "leaf_team"),
+                "copilot_usage_data": [],
+            }
+        usage_by_team[team_slug]["copilot_usage_data"].append(entry)
+
+    for team_data in usage_by_team.values():
+        team_data["copilot_usage_data"] = sorted(
+            team_data["copilot_usage_data"], key=lambda x: x.get("day", "")
+        )
+
+    return usage_by_team
+
 
 # --- ElasticsearchManager class definition ---
 class ElasticsearchManager:
@@ -1483,6 +2326,68 @@ class ElasticsearchManager:
             logger.info(f"[created] to [{index_name}]: {data}")
 
 
+def get_billing_backfill_window():
+    start_day = parse_iso_date(Paras.billing_backfill_start_date)
+    if not start_day:
+        start_day = date(2026, 6, 1)
+    end_day = datetime.utcnow().date()
+    if start_day > end_day:
+        start_day = end_day
+    return start_day, end_day
+
+
+def process_ai_credit_usage(
+    github_org_manager,
+    es_manager,
+    data_seat_assignments,
+):
+    start_day, end_day = get_billing_backfill_window()
+    logger.info("Processing AI credit usage backfill")
+    raw_records, user_daily_records = github_org_manager.get_ai_credit_usage_backfill(
+        start_day,
+        end_day,
+        seat_assignments=data_seat_assignments,
+    )
+    for record in raw_records:
+        es_manager.write_to_es(Indexes.index_ai_credit_usage, record)
+    for record in user_daily_records:
+        es_manager.write_to_es(Indexes.index_ai_credit_user_daily, record)
+
+
+def process_token_usage(
+    github_org_manager,
+    es_manager,
+    data_seat_assignments,
+    user_metrics_data,
+):
+    start_day, end_day = get_billing_backfill_window()
+    logger.info("Processing token usage from user metrics")
+    raw_records, user_daily_records = build_token_usage_records_from_user_metrics(
+        user_metrics_data,
+        data_seat_assignments,
+        start_day,
+        end_day,
+        github_org_manager.organization_slug,
+        github_org_manager.scope_type,
+        github_org_manager.slug_type,
+    )
+    logger.info(
+        f"Built {len(raw_records)} token usage records and {len(user_daily_records)} user daily token records"
+    )
+    dict_save_to_json_file(
+        raw_records,
+        f"{github_org_manager.organization_slug}_token_usage",
+    )
+    dict_save_to_json_file(
+        user_daily_records,
+        f"{github_org_manager.organization_slug}_token_user_daily",
+    )
+    for record in raw_records:
+        es_manager.write_to_es(Indexes.index_token_usage, record)
+    for record in user_daily_records:
+        es_manager.write_to_es(Indexes.index_token_user_daily, record)
+
+
 def main(organization_slug):
     logger.info(
         "=========================================================================================================="
@@ -1551,6 +2456,7 @@ def main(organization_slug):
     logger.info(
         f"Processing Copilot user metrics for {slug_type}: {organization_slug}"
     )
+    user_metrics_data = []
     try:
         logger.info("Calling get_copilot_user_metrics()...")
         user_metrics_data = github_org_manager.get_copilot_user_metrics()
@@ -1585,6 +2491,19 @@ def main(organization_slug):
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
 
+    process_ai_credit_usage(
+        github_org_manager,
+        es_manager,
+        data_seat_assignments,
+    )
+
+    process_token_usage(
+        github_org_manager,
+        es_manager,
+        data_seat_assignments,
+        user_metrics_data,
+    )
+
     # Create user summaries with aggregated top_model/language/feature
     try:
         logger.info("Creating user summaries with aggregated top values...")
@@ -1608,6 +2527,21 @@ def main(organization_slug):
 
     # Process usage data
     copilot_usage_datas = github_org_manager.get_copilot_usages(team_slug="all")
+    if not any(
+        team_data.get("copilot_usage_data") for team_data in copilot_usage_datas.values()
+    ):
+        logger.warning(
+            "Legacy Copilot usage metrics endpoint returned no data; synthesizing usage breakdown from user metrics."
+        )
+        synthesized_usage = build_usage_from_user_metrics(
+            user_metrics_data, organization_slug, github_org_manager.teams
+        )
+        if synthesized_usage:
+            copilot_usage_datas = synthesized_usage
+            logger.info(
+                f"Built synthesized usage data for {len(copilot_usage_datas)} teams from user metrics"
+            )
+
     logger.info(f"Processing Copilot usage data for {slug_type}: {organization_slug}")
     for team_slug, data_with_position in copilot_usage_datas.items():
         logger.info(f"Processing Copilot usage data for team: {team_slug}")
@@ -1668,6 +2602,37 @@ def main(organization_slug):
         logger.info(f"Data processing completed for team: {team_slug}")
 
 
+def process_enterprise_billing(enterprise_slug):
+    logger.info(
+        "=========================================================================================================="
+    )
+    logger.info(f"Starting billing processing for Enterprise: {enterprise_slug}")
+    github_enterprise_manager = GitHubOrganizationManager(
+        enterprise_slug,
+        is_standalone=True,
+        fetch_teams=False,
+        slug_type_override="Enterprise",
+    )
+    es_manager = ElasticsearchManager()
+
+    data_seat_info_settings = github_enterprise_manager.get_seat_info_settings_standalone()
+    if data_seat_info_settings:
+        es_manager.write_to_es(Indexes.index_seat_info, data_seat_info_settings)
+
+    data_seat_assignments = github_enterprise_manager.get_seat_assignments()
+    if data_seat_assignments:
+        for seat_assignment in data_seat_assignments:
+            es_manager.write_to_es(
+                Indexes.index_seat_assignments,
+                seat_assignment,
+                update_condition={"is_active_today": 1},
+            )
+
+    process_ai_credit_usage(
+        github_enterprise_manager, es_manager, data_seat_assignments
+    )
+
+
 if __name__ == "__main__":
     import os
     
@@ -1683,9 +2648,13 @@ if __name__ == "__main__":
                 f"Starting data processing for organizations: {Paras.organization_slugs}"
             )
             # Split Paras.organization_slugs and process each organization, remember to remove spaces after splitting
-            organization_slugs = Paras.organization_slugs.split(",")
+            organization_slugs = split_csv_env(Paras.organization_slugs)
             for organization_slug in organization_slugs:
-                main(organization_slug.strip())
+                main(organization_slug)
+
+            enterprise_slugs = split_csv_env(Paras.enterprise_slugs)
+            for enterprise_slug in enterprise_slugs:
+                process_enterprise_billing(enterprise_slug)
             
             logger.info("-----------------Finished Successfully-----------------")
             logger.info(f"Sleeping for {execution_interval_hours} hour(s) until next run...")
