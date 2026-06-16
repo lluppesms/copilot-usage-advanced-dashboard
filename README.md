@@ -1,6 +1,9 @@
 # Copilot Usage Advanced Dashboard Tutorial
 
-> ⚠️**Disclaimer**: This project is open sourced to solve problems that are critical to some users, and the functions provided may not be natively provided by GitHub Copilot. Therefore the contents,  opinions and views expressed in this project are solely mine do not necessarly refect the views of my employer, These are my personal notes based on myunderstanding of the code and trial deployments to GitHub Copilot. If anything is wrong with this article, please let me know through the [issues](https://github.com/satomic/copilot-usage-advanced-dashboard/issues/new). l appreciate your help in correcting my understanding.
+[repo-home]: https://github.com/satomic/copilot-usage-advanced-dashboard
+[repo-issues]: https://github.com/satomic/copilot-usage-advanced-dashboard/issues/new
+
+> ⚠️**Disclaimer**: This project is open sourced to solve problems that are critical to some users, and the functions provided may not be natively provided by GitHub Copilot. Therefore the contents,  opinions and views expressed in this project are solely mine do not necessarly refect the views of my employer, These are my personal notes based on myunderstanding of the code and trial deployments to GitHub Copilot. If anything is wrong with this article, please let me know through the [issues][repo-issues]. l appreciate your help in correcting my understanding.
 
 > ✅**Risk Warning**: This project uses the standard Copilot REST API to obtain data, aggregate data, and visualize it, without any potential risks.
 
@@ -15,7 +18,6 @@
 - [🧪 Testing Guide](./docs/testing-guide.md)
 - [Introduction](#introduction)
   - [Copilot Usage Advanced Dashboard](#copilot-usage-advanced-dashboard)
-  - [Copilot Usage Advanced Dashboard Original](#copilot-usage-advanced-dashboard-original)
 - [Features](#features)
   - [0. Filtering](#filtering-variables)
   - [1. Organization](#1-organization)
@@ -46,7 +48,7 @@
 
 # Introduction
 
-[Copilot Usage Advanced Dashboard](https://github.com/satomic/copilot-usage-advanced-dashboard) is a single data panel display that almost fully utilizes data from Copilot APIs, The APIs used are:
+[Copilot Usage Advanced Dashboard][repo-home] is a single data panel display that almost fully utilizes data from Copilot APIs, The APIs used are:
 
 - [List teams of an organization](https://docs.github.com/en/enterprise-cloud@latest/rest/teams/teams?apiVersion=2022-11-28#list-teams)
 - [Get a summary of Copilot metrics for a team](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-metrics?apiVersion=2022-11-28#get-copilot-metrics-for-a-team)
@@ -64,7 +66,7 @@ This represents Copilot usage in multi organizations & teams from different dime
 - Based on Grafana's built-in alerting function, you can set alert rules for some inappropriate usage behaviors, such as sending alerts to users who have been inactive for a long time.
 - It can be easily integrated with third-party systems, whether it is extracting data from Elasticsearch to other data visualization platforms for data visualization, or adding other data sources in the Copilot Usage Advanced Dashboard for joint data visualization.
 
-## Online Demo Environment
+<!-- ## Online Demo Environment
 
 > Designed 2 dashboards, both can exist at the same time in Grafana.
 
@@ -91,7 +93,8 @@ This represents Copilot usage in multi organizations & teams from different dime
 - password：`demouser`
 
   ![Dashboard Image](image/cpuad_full_FkIGG_4fzg.png)
-
+ -->
+ 
 # Filtering Variables
 
 Supports four filtering variables, namely
@@ -113,6 +116,9 @@ The choice of variables is dynamically associated with the data display
 
 > First, based on [List teams of an onganization](https://docs.github.com/en/enterprise-cloud@latest/rest/teams/teams?apiVersion=2022-11-28#list-teams), get all the teams under the Organization, and then based on [Get a summary of Copilot usage for a team](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-usage?apiVersion=2022-11-28#get-a-summary-of-copilot-usage-for-a-team), sum and calculate the data of all teams under the Organization to get complete Organization-level data.
 
+<details>
+<summary>Calculation Details</summary>
+
 - Acceptance Rate Average = `sum(total_acceptances_count) / sum(total_suggestions_count)`
 - Cumulative Number of Acceptence (Count) = `sum(total_acceptances_count)`
 - Cumulative Number of Suggestions (Count) = `sum(total_suggestions_count)`
@@ -122,16 +128,23 @@ The choice of variables is dynamically associated with the data display
 - Total Suggestions & Acceptances Count = `total_suggestions_count` & `total_acceptances_count`
 - Total Lines Suggested & Accepted = `total_lines_suggested `& `total_lines_accepted`
 
+</details>
+
 ![Dashboard Image](image/image_WVNHVnb2OZ.png)
 
 ### 2. Teams
 
 > Based on the breakdown data in [Get a summary of Copilot usage for a team](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-usage?apiVersion=2022-11-28#get-a-summary-of-copilot-usage-for-a-team), the data is aggregated by Teams to obtain data comparisons of different Teams.
 
+<details>
+<summary>Calculation Details</summary>
+
 - Number of Teams = `unique_count(team_slug)`
 - Top Teams by Accepted Prompts = `sum(acceptances_count).groupby(team_slug)`
 - Top Teams by Acceptance Rate = `sum(acceptances_count).groupby(team_slug) / sum(suggestions_count).groupby(team_slug)`
 - Team Breakdown = `sum(*).groupby(team_slug)`
+
+</details>
 
 ![Dashboard Image](image/image_TGcs3tD7Cs.png)
 
@@ -139,10 +152,15 @@ The choice of variables is dynamically associated with the data display
 
 > Based on the breakdown data in [Get a summary of Copilot usage for a team](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-usage?apiVersion=2022-11-28#get-a-summary-of-copilot-usage-for-a-team), the data is aggregated according to Languages ​​to obtain data comparisons for different Languages.
 
+<details>
+<summary>Calculation Details</summary>
+
 - Number of Languages= `unique_count(language)`
 - Top Languages by Accepted Prompts = `sum(acceptances_count).groupby(language)`
 - Top Languages by Acceptance Rate = `sum(acceptances_count).groupby(language) / sum(suggestions_count).groupby(language)`
 - Languages Breakdown = `sum(*).groupby(language)`
+
+</details>
 
 ![Dashboard Image](image/image_YHXpu1wRf2.png)
 
@@ -150,10 +168,15 @@ The choice of variables is dynamically associated with the data display
 
 > Based on the breakdown data in [Get a summary of Copilot usage for a team](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-usage?apiVersion=2022-11-28#get-a-summary-of-copilot-usage-for-a-team), the data is aggregated by Editors to obtain data comparisons for different Editors.
 
+<details>
+<summary>Calculation Details</summary>
+
 - Number of Editors = `unique_count(editor)`
 - Top Editors by Accepted Prompts = `sum(acceptances_count).groupby(editor)`
 - Top Editors by Acceptance Rate = `sum(acceptances_count).groupby(editor) / sum(suggestions_count).groupby(editor)`
 - Editors Breakdown = `sum(*).groupby(editor)`
+
+</details>
 
 ![Dashboard Image](image/image_9P1zJxBMaO.png)
 
@@ -161,17 +184,25 @@ The choice of variables is dynamically associated with the data display
 
 > Based on the data from [Get a summary of Copilot usage for a team](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-usage?apiVersion=2022-11-28#get-a-summary-of-copilot-usage-for-a-team), we can get the usage of Copilot Chat.
 
+<details>
+<summary>Calculation Details</summary>
+
 - Acceptance Rate Average = `sum(total_chat_acceptances) / sum(total_chat_turns)`
 - Cumulative Number of Acceptances = `sum(total_chat_acceptances)`
 - Cumulative Number of Turns = `sum(total_chat_turns)`
 - Total Acceptances | Total Turns Count = `total_chat_acceptances` | `total_chat_turns`
 - Total Active Copilot Chat Users = `total_active_chat_users`
 
+</details>
+
 ![Dashboard Image](image/image_chat.png)
 
 ### 6. Seat Analysis
 
 > Based on the data analysis of [Get Copilot seat information and settings for an organization](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-user-management?apiVersion=2022-11-28#get-copilot-seat-information-and-settings-for-an-organization) and [List all Copilot seat assignments for an organization](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-user-management?apiVersion=2022-11-28#list-all-copilot-seat-assignments-for-an-organization), the seat allocation and usage are presented in a unified manner.
+
+<details>
+<summary>Calculation Details</summary>
 
 - Copilot Plan Type = `count(seats).groupby(plan_type)`
 - Total = `seat_breakdown.total`
@@ -181,11 +212,16 @@ The choice of variables is dynamically associated with the data display
 - Ranking of Inactive Users ( ≥ 2 days ) =  `today - last_activity_at`
 - All assigned seats = `*`
 
+</details>
+
 ![Dashboard Image](image/image_vNpkYpc-xW.png)
 
 ### 7. Breakdown Heatmap
 
 > Based on the breakdown data in [Get a summary of Copilot usage for a team](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-usage?apiVersion=2022-11-28#get-a-summary-of-copilot-usage-for-a-team), we analyze the data from two dimensions: Languages ​​and Editors. We can clearly see what combination of Languages ​​and Editors can achieve the best Copilot usage effect.
+
+<details>
+<summary>Calculation Details</summary>
 
 - Active Users Count (Group by Language) = `active_users.groupby(language)`
 - Accept Rate by Count (%) = `sum(acceptances_count).groupby(language) / sum(suggestions_count).groupby(language)`
@@ -193,6 +229,8 @@ The choice of variables is dynamically associated with the data display
 - Active Users Count (Group by Editor) = `active_users.groupby(editor)`
 - Accept Rate by Count (%) = `sum(acceptances_count).groupby(editor) / sum(suggestions_count).groupby(editor)`
 - Accept Rate by Lines (%) = `sum(lines_accepted).groupby(editor) / sum(lines_suggested).groupby(editor)`
+
+</details>
 
 ![Dashboard Image](image/image_i7-wXGj-UA.png)
 
@@ -208,12 +246,20 @@ Based on the data from [Get Copilot User Metrics](https://docs.github.com/en/ent
 
 **Four key metric panels provide at-a-glance insights:**
 
+<details>
+<summary>Calculation Details</summary>
+
 - **Total Users** = `cardinality(user_login)` - Unique count of users with Copilot activity in the selected time range
 - **Total Suggestions** = `sum(code_generation_activity_count)` - Total number of code suggestions generated across all users
 - **Total Acceptances** = `sum(code_acceptance_activity_count)` - Total number of code suggestions accepted by users
 - **Acceptance Rate** = `sum(code_acceptance_activity_count) / sum(code_generation_activity_count)` - Overall acceptance percentage showing code quality and relevance
 
+</details>
+
 **Comprehensive per-user breakdown with sortable columns:**
+
+<details>
+<summary>Calculation Details</summary>
 
 - **User** - GitHub username/login
 - **User Initiated Interactions** = `sum(user_initiated_interaction_count)` - Direct user actions requesting Copilot suggestions
@@ -225,11 +271,15 @@ Based on the data from [Get Copilot User Metrics](https://docs.github.com/en/ent
 - **Chat Usage** = `sum(used_chat)` - Count of Copilot Chat interactions
 - **Active Days** = `cardinality(day)` - Number of distinct days the user engaged with Copilot
 
+</details>
+
 #### Activity Visualizations & Top 10 Users Leaderboard
 
 ![Dashboard Image](image/user-metrics-charts.png)
 
 **Two time-series charts show engagement patterns:**
+<details>
+<summary>More Details</summary>
 
 **Daily Active Users:**
 
@@ -275,6 +325,8 @@ Based on the data from [Get Copilot User Metrics](https://docs.github.com/en/ent
 - Correlate active days with productivity metrics
 - Generate executive reports on Copilot ROI
 
+</details>
+
 ### 9. Copilot Seat Info & Top Languages
 
 - You can view the distribution of seats, Enterprise or Business? and overall activation trends. And for users who don't use Copilot, they are ranked based on the length of inactivity and list users who have never activated.
@@ -300,6 +352,9 @@ You can analyze the effect of Copilot in different languages ​​and different
 
 This row shows how AI credits are being consumed across organizations, models, and products so you can understand adoption and consumption patterns under the UBB model.
 
+<details>
+<summary>Calculation Details</summary>
+
 - **Total AI Credits** = `sum(ai_credits_net)` - Net AI credits consumed across the selected time range
 - **Active Credit Users** = `cardinality(user_login)` - Unique users with AI credit consumption
 - **Avg Credits per Active User** = `sum(ai_credits_net) / cardinality(user_login)`
@@ -309,11 +364,16 @@ This row shows how AI credits are being consumed across organizations, models, a
 - **Credits by Product/SKU** = `sum(ai_credits_net).groupby(sku)` - Consumption split across Copilot products
 - **User-by-Day Credit Drilldown** - Per-user daily breakdown for detailed investigation
 
+</details>
+
 ### 13. Token Usage
 
 > **NEW in v1.10**: Token-level analytics derived from user metrics, stored in the `copilot_token_usage` and `copilot_token_user_daily` Elasticsearch indexes. Prompt and output token volume is allocated by model and language so you can see where token spend is concentrated.
 
 This row complements AI Credits by showing the raw **prompt** and **output** token volume behind Copilot activity, reported in millions for readability.
+
+<details>
+<summary>Calculation Details</summary>
 
 - **Total Tokens (Millions)** = `sum(token_total_million)` - Combined prompt + output tokens
 - **Active Token Users** = `cardinality(user_login)` - Unique users generating token activity
@@ -322,6 +382,8 @@ This row complements AI Credits by showing the raw **prompt** and **output** tok
 - **Tokens by Model** / **Tokens by Model (Millions)** = `sum(token_total).groupby(model)` - Consumption split across models
 - **Top Users by Tokens** = `sum(token_total).groupby(user_login)` - Leaderboard of heaviest token consumers
 - **Token Usage by User by Day** - Per-user daily prompt/output/total token breakdown
+
+</details>
 
 ![Dashboard Image](image/token-usage.png)
 
