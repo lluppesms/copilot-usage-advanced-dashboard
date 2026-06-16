@@ -134,6 +134,10 @@ class Indexes:
     index_ai_credit_user_daily = os.getenv(
         "INDEX_AI_CREDIT_USER_DAILY", "copilot_ai_credit_user_daily"
     )
+    index_token_usage = os.getenv("INDEX_TOKEN_USAGE", "copilot_token_usage")
+    index_token_user_daily = os.getenv(
+        "INDEX_TOKEN_USER_DAILY", "copilot_token_user_daily"
+    )
 
 
 logger = configure_logger(log_path=Paras.log_path)
@@ -334,6 +338,7 @@ def build_billing_user_daily_records(
     raw_records, seat_assignments, start_day, end_day, scope_slug, scope_type, slug_type
 ):
     aggregated = {}
+
     for record in raw_records:
         user_login = record.get("user_login")
         if not user_login:
@@ -430,6 +435,228 @@ def build_billing_user_daily_records(
         )
 
     return list(aggregated.values())
+
+
+def distribute_weighted_int(total, weighted_keys):
+    """Distribute an integer total across weighted keys while preserving sums."""
+    if total <= 0 or not weighted_keys:
+        return {k: 0 for k, _ in weighted_keys}
+
+    allocations = {}
+    remainders = []
+    allocated = 0
+    for key, weight in weighted_keys:
+        raw = total * float(weight)
+        value = int(raw)
+        allocations[key] = value
+        allocated += value
+        remainders.append((raw - value, key))
+
+    remainder = total - allocated
+    if remainder > 0:
+        remainders.sort(reverse=True)
+        idx = 0
+        while remainder > 0 and remainders:
+            _, key = remainders[idx % len(remainders)]
+            allocations[key] += 1
+            remainder -= 1
+            idx += 1
+
+    return allocations
+
+
+def build_token_usage_records_from_user_metrics(
+    user_metrics_data,
+    seat_assignments,
+    start_day,
+    end_day,
+    scope_slug,
+    scope_type,
+    slug_type,
+):
+    raw_records = []
+    raw_item_index = 0
+
+    for record in user_metrics_data or []:
+        day_value = parse_iso_date(record.get("day"))
+        if not day_value:
+            continue
+
+        day_str = day_value.isoformat()
+        user_login = record.get("user_login")
+        if not user_login:
+            continue
+
+        token_usage = (record.get("totals_by_cli") or {}).get("token_usage") or {}
+        prompt_tokens = int(token_usage.get("prompt_tokens_sum", 0) or 0)
+        output_tokens = int(token_usage.get("output_tokens_sum", 0) or 0)
+        total_tokens = prompt_tokens + output_tokens
+        if total_tokens <= 0:
+            continue
+
+        language_model_entries = record.get("totals_by_language_model") or []
+        weight_entries = []
+        for entry in language_model_entries:
+            model = entry.get("model", "unknown")
+            language = entry.get("language", "unknown")
+            weight = int(entry.get("code_generation_activity_count", 0) or 0)
+            if weight > 0:
+                weight_entries.append(((model, language), weight))
+
+        if not weight_entries:
+            fallback_model = record.get("top_model", "unknown")
+            fallback_language = record.get("top_language", "unknown")
+            weight_entries = [((fallback_model, fallback_language), 1)]
+
+        total_weight = sum(weight for _, weight in weight_entries) or 1
+        weighted_keys = [(key, weight / total_weight) for key, weight in weight_entries]
+
+        prompt_alloc = distribute_weighted_int(prompt_tokens, weighted_keys)
+        output_alloc = distribute_weighted_int(output_tokens, weighted_keys)
+        total_alloc = distribute_weighted_int(total_tokens, weighted_keys)
+
+        for (model, language), _ in weight_entries:
+            raw_item_index += 1
+            token_prompt = int(prompt_alloc.get((model, language), 0) or 0)
+            token_output = int(output_alloc.get((model, language), 0) or 0)
+            token_total = int(total_alloc.get((model, language), 0) or 0)
+            if token_total <= 0:
+                continue
+
+            raw_record = {
+                "day": day_str,
+                "organization_slug": scope_slug,
+                "member_organization_slug": record.get("organization_slug") or scope_slug,
+                "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+                "scope_slug": scope_slug,
+                "scope_type": scope_type,
+                "slug_type": slug_type,
+                "user_login": user_login,
+                "user_id": record.get("user_id"),
+                "member_organization_id": record.get("organization_id") or record.get("enterprise_id"),
+                "assignee_team_slug": record.get("assignee_team_slug", "no-team"),
+                "product": "Copilot",
+                "sku": "Copilot Token Usage",
+                "model": model,
+                "language": language,
+                "unit_type": "tokens",
+                "quantity_raw": token_total,
+                "token_prompt": token_prompt,
+                "token_output": token_output,
+                "token_total": token_total,
+                "token_prompt_million": round(token_prompt / 1_000_000, 6),
+                "token_output_million": round(token_output / 1_000_000, 6),
+                "token_total_million": round(token_total / 1_000_000, 6),
+                "has_usage": True,
+                "raw_item_index": raw_item_index,
+            }
+            raw_record["unique_hash"] = generate_unique_hash(
+                raw_record,
+                key_properties=[
+                    "scope_slug",
+                    "day",
+                    "user_login",
+                    "model",
+                    "language",
+                    "raw_item_index",
+                ],
+            )
+            raw_records.append(raw_record)
+
+    aggregated = {}
+    for record in raw_records:
+        key = (record.get("day"), record.get("user_login"))
+        entry = aggregated.setdefault(
+            key,
+            {
+                "day": record.get("day"),
+                "organization_slug": scope_slug,
+                "member_organization_slug": record.get("member_organization_slug"),
+                "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+                "scope_slug": scope_slug,
+                "scope_type": scope_type,
+                "slug_type": slug_type,
+                "user_login": record.get("user_login"),
+                "user_id": record.get("user_id"),
+                "member_organization_id": record.get("member_organization_id"),
+                "assignee_team_slug": record.get("assignee_team_slug", "no-team"),
+                "plan_type": None,
+                "quantity_raw": 0,
+                "token_prompt": 0,
+                "token_output": 0,
+                "token_total": 0,
+                "token_prompt_million": 0,
+                "token_output_million": 0,
+                "token_total_million": 0,
+                "has_usage": False,
+            },
+        )
+        entry["has_usage"] = True
+        entry["quantity_raw"] += record.get("quantity_raw", 0) or 0
+        entry["token_prompt"] += record.get("token_prompt", 0) or 0
+        entry["token_output"] += record.get("token_output", 0) or 0
+        entry["token_total"] += record.get("token_total", 0) or 0
+        entry["token_prompt_million"] = round(entry["token_prompt"] / 1_000_000, 6)
+        entry["token_output_million"] = round(entry["token_output"] / 1_000_000, 6)
+        entry["token_total_million"] = round(entry["token_total"] / 1_000_000, 6)
+
+    for day_value in iter_days(start_day, end_day):
+        day_str = day_value.isoformat()
+        seen_users = set()
+        for seat in seat_assignments or []:
+            user_login = seat.get("assignee_login")
+            if not user_login or user_login.startswith("unassigned-seat-"):
+                continue
+            if not seat_is_in_pool_for_day(seat, day_value):
+                continue
+            if user_login in seen_users:
+                continue
+            seen_users.add(user_login)
+            key = (day_str, user_login)
+            entry = aggregated.setdefault(
+                key,
+                {
+                    "day": day_str,
+                    "organization_slug": scope_slug,
+                    "member_organization_slug": seat.get("member_organization_slug"),
+                    "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+                    "scope_slug": scope_slug,
+                    "scope_type": scope_type,
+                    "slug_type": slug_type,
+                    "user_login": user_login,
+                    "user_id": None,
+                    "member_organization_id": seat.get("member_organization_id"),
+                    "assignee_team_slug": seat.get("assignee_team_slug", "no-team"),
+                    "plan_type": seat.get("plan_type"),
+                    "quantity_raw": 0,
+                    "token_prompt": 0,
+                    "token_output": 0,
+                    "token_total": 0,
+                    "token_prompt_million": 0,
+                    "token_output_million": 0,
+                    "token_total_million": 0,
+                    "has_usage": False,
+                },
+            )
+            entry["member_organization_slug"] = (
+                entry.get("member_organization_slug")
+                or seat.get("member_organization_slug")
+            )
+            entry["member_organization_id"] = (
+                entry.get("member_organization_id")
+                or seat.get("member_organization_id")
+            )
+            entry["assignee_team_slug"] = seat.get("assignee_team_slug", "no-team")
+            entry["plan_type"] = entry.get("plan_type") or seat.get("plan_type")
+
+    user_daily_records = list(aggregated.values())
+    for entry in user_daily_records:
+        entry["unique_hash"] = generate_unique_hash(
+            entry,
+            key_properties=["scope_slug", "day", "user_login"],
+        )
+
+    return raw_records, user_daily_records
 
 
 def _compute_percentile(sorted_values, percentile):
@@ -1738,6 +1965,280 @@ class DataSplitter:
                 dotcom_chat_list.append(chat_entry_with_day)
         return dotcom_chat_list
 
+def build_usage_from_user_metrics(user_metrics_data, organization_slug, teams):
+    """Build usage-like records from user metrics when legacy /copilot/metrics is unavailable."""
+    if not user_metrics_data:
+        return {}
+
+    team_position_map = {"no-team": "root_team"}
+    for team in teams or []:
+        team_slug = team.get("slug")
+        if team_slug:
+            team_position_map[team_slug] = team.get("position_in_tree", "leaf_team")
+
+    groups = {}
+
+    def get_group(team_slug, day):
+        key = (team_slug, day)
+        if key not in groups:
+            groups[key] = {
+                "total_suggestions_count": 0,
+                "total_acceptances_count": 0,
+                "total_lines_suggested": 0,
+                "total_lines_accepted": 0,
+                "total_chat_acceptances": 0,
+                "total_chat_turns": 0,
+                "total_chat_copy_events": 0,
+                "total_chat_insertion_events": 0,
+                "total_pr_summaries_created": 0,
+                "active_users": set(),
+                "active_chat_users": set(),
+                "pr_engaged_users": set(),
+                "dotcom_chat_engaged_users": set(),
+                "breakdown": {},
+                "breakdown_users": {},
+                "breakdown_chat": {},
+                "breakdown_chat_users": {},
+                "pr_reviews": {},
+                "dotcom_chat": {},
+                "dotcom_chat_users_by_model": {},
+            }
+        return groups[key]
+
+    def distribute_int(total, weighted_keys):
+        """Distribute an integer total across weighted keys while preserving sums."""
+        if total <= 0 or not weighted_keys:
+            return {k: 0 for k, _ in weighted_keys}
+
+        allocations = {}
+        remainders = []
+        allocated = 0
+        for key, weight in weighted_keys:
+            raw = total * float(weight)
+            value = int(raw)
+            allocations[key] = value
+            allocated += value
+            remainders.append((raw - value, key))
+
+        remainder = total - allocated
+        if remainder > 0:
+            remainders.sort(reverse=True)
+            idx = 0
+            while remainder > 0 and remainders:
+                _, key = remainders[idx % len(remainders)]
+                allocations[key] += 1
+                remainder -= 1
+                idx += 1
+
+        return allocations
+
+    for record in user_metrics_data:
+        day = record.get("day")
+        if not day:
+            continue
+
+        team_slug = record.get("assignee_team_slug", "no-team") or "no-team"
+        user_login = record.get("user_login", "unknown")
+        group = get_group(team_slug, day)
+
+        generated = int(record.get("code_generation_activity_count", 0) or 0)
+        accepted = int(record.get("code_acceptance_activity_count", 0) or 0)
+        interactions = int(record.get("user_initiated_interaction_count", 0) or 0)
+        lines_suggested = int(record.get("loc_suggested_to_add_sum", 0) or 0)
+        lines_accepted = int(record.get("loc_added_sum", 0) or 0)
+
+        if generated > 0 or accepted > 0 or interactions > 0:
+            group["active_users"].add(user_login)
+
+        group["total_suggestions_count"] += generated
+        group["total_acceptances_count"] += accepted
+        group["total_lines_suggested"] += lines_suggested
+        group["total_lines_accepted"] += lines_accepted
+
+        editor_activity = {}
+        for ide_entry in record.get("totals_by_ide", []):
+            editor_name = ide_entry.get("ide", "unknown")
+            editor_weight = int(
+                ide_entry.get("code_generation_activity_count", 0)
+                or ide_entry.get("user_initiated_interaction_count", 0)
+                or 0
+            )
+            editor_activity[editor_name] = editor_activity.get(editor_name, 0) + max(
+                editor_weight, 0
+            )
+
+        if not editor_activity:
+            editor_activity = {"unknown": 1}
+
+        editor_weight_sum = sum(editor_activity.values()) or 1
+        editor_weights = [
+            (editor_name, activity / editor_weight_sum)
+            for editor_name, activity in editor_activity.items()
+        ]
+
+        for entry in record.get("totals_by_language_model", []):
+            language = entry.get("language", "others")
+            model = entry.get("model", "others")
+            b_generated = int(entry.get("code_generation_activity_count", 0) or 0)
+            b_accepted = int(entry.get("code_acceptance_activity_count", 0) or 0)
+            b_lines_suggested = int(entry.get("loc_suggested_to_add_sum", 0) or 0)
+            b_lines_accepted = int(entry.get("loc_added_sum", 0) or 0)
+
+            generated_by_editor = distribute_int(b_generated, editor_weights)
+            accepted_by_editor = distribute_int(b_accepted, editor_weights)
+            lines_suggested_by_editor = distribute_int(b_lines_suggested, editor_weights)
+            lines_accepted_by_editor = distribute_int(b_lines_accepted, editor_weights)
+
+            for editor_name, _ in editor_weights:
+                b_key = (language, editor_name, model)
+                if b_key not in group["breakdown"]:
+                    group["breakdown"][b_key] = {
+                        "language": language,
+                        "editor": editor_name,
+                        "model": model,
+                        "suggestions_count": 0,
+                        "acceptances_count": 0,
+                        "lines_suggested": 0,
+                        "lines_accepted": 0,
+                    }
+                    group["breakdown_users"][b_key] = set()
+
+                group["breakdown"][b_key]["suggestions_count"] += generated_by_editor.get(
+                    editor_name, 0
+                )
+                group["breakdown"][b_key]["acceptances_count"] += accepted_by_editor.get(
+                    editor_name, 0
+                )
+                group["breakdown"][b_key]["lines_suggested"] += lines_suggested_by_editor.get(
+                    editor_name, 0
+                )
+                group["breakdown"][b_key]["lines_accepted"] += lines_accepted_by_editor.get(
+                    editor_name, 0
+                )
+
+                if (
+                    generated_by_editor.get(editor_name, 0) > 0
+                    or accepted_by_editor.get(editor_name, 0) > 0
+                ):
+                    group["breakdown_users"][b_key].add(user_login)
+
+        for entry in record.get("totals_by_ide", []):
+            editor = entry.get("ide", "unknown")
+            model = "all-models"
+            c_key = (editor, model)
+
+            if c_key not in group["breakdown_chat"]:
+                group["breakdown_chat"][c_key] = {
+                    "editor": editor,
+                    "model": model,
+                    "chat_turns": 0,
+                    "chat_copy_events": 0,
+                    "chat_insertion_events": 0,
+                    "chat_acceptances": 0,
+                }
+                group["breakdown_chat_users"][c_key] = set()
+
+            chat_turns = int(entry.get("user_initiated_interaction_count", 0) or 0)
+            chat_acceptances = int(entry.get("code_acceptance_activity_count", 0) or 0)
+
+            group["breakdown_chat"][c_key]["chat_turns"] += chat_turns
+            group["breakdown_chat"][c_key]["chat_acceptances"] += chat_acceptances
+
+            if chat_turns > 0:
+                group["active_chat_users"].add(user_login)
+                group["breakdown_chat_users"][c_key].add(user_login)
+
+            group["total_chat_turns"] += chat_turns
+            group["total_chat_acceptances"] += chat_acceptances
+
+        for entry in record.get("totals_by_model_feature", []):
+            feature = str(entry.get("feature", "")).lower()
+            model = entry.get("model", "others")
+            event_count = int(entry.get("user_initiated_interaction_count", 0) or 0) + int(
+                entry.get("code_generation_activity_count", 0) or 0
+            )
+
+            if event_count <= 0:
+                continue
+
+            if "dotcom" in feature and "chat" in feature:
+                group["dotcom_chat"][model] = group["dotcom_chat"].get(model, 0) + event_count
+                if model not in group["dotcom_chat_users_by_model"]:
+                    group["dotcom_chat_users_by_model"][model] = set()
+                group["dotcom_chat_users_by_model"][model].add(user_login)
+                group["dotcom_chat_engaged_users"].add(user_login)
+
+            if "pr" in feature or "pull" in feature:
+                pr_key = ("all-repositories", model)
+                group["pr_reviews"][pr_key] = group["pr_reviews"].get(pr_key, 0) + event_count
+                group["pr_engaged_users"].add(user_login)
+                group["total_pr_summaries_created"] += event_count
+
+    usage_by_team = {}
+    for (team_slug, day), group in groups.items():
+        entry = {
+            "day": day,
+            "total_suggestions_count": group["total_suggestions_count"],
+            "total_acceptances_count": group["total_acceptances_count"],
+            "total_lines_suggested": group["total_lines_suggested"],
+            "total_lines_accepted": group["total_lines_accepted"],
+            "total_active_users": len(group["active_users"]),
+            "total_chat_acceptances": group["total_chat_acceptances"],
+            "total_chat_turns": group["total_chat_turns"],
+            "total_active_chat_users": len(group["active_chat_users"]),
+            "total_chat_copy_events": group["total_chat_copy_events"],
+            "total_chat_insertion_events": group["total_chat_insertion_events"],
+            "total_pr_summaries_created": group["total_pr_summaries_created"],
+            "total_pr_engaged_users": len(group["pr_engaged_users"]),
+            "total_dotcom_chat_engaged_users": len(group["dotcom_chat_engaged_users"]),
+            "breakdown": [],
+            "breakdown_chat": [],
+            "pr_reviews": [],
+            "dotcom_chat": [],
+        }
+
+        for key, value in group["breakdown"].items():
+            value["active_users"] = len(group["breakdown_users"].get(key, set()))
+            entry["breakdown"].append(value)
+
+        for key, value in group["breakdown_chat"].items():
+            value["active_users"] = len(group["breakdown_chat_users"].get(key, set()))
+            entry["breakdown_chat"].append(value)
+
+        for (repository, model), pr_count in group["pr_reviews"].items():
+            entry["pr_reviews"].append(
+                {
+                    "repository": repository,
+                    "model": model,
+                    "pr_summaries_created": pr_count,
+                }
+            )
+
+        for model, chat_turns in group["dotcom_chat"].items():
+            entry["dotcom_chat"].append(
+                {
+                    "model": model,
+                    "chat_turns": chat_turns,
+                    "active_users": len(
+                        group["dotcom_chat_users_by_model"].get(model, set())
+                    ),
+                }
+            )
+
+        if team_slug not in usage_by_team:
+            usage_by_team[team_slug] = {
+                "position_in_tree": team_position_map.get(team_slug, "leaf_team"),
+                "copilot_usage_data": [],
+            }
+        usage_by_team[team_slug]["copilot_usage_data"].append(entry)
+
+    for team_data in usage_by_team.values():
+        team_data["copilot_usage_data"] = sorted(
+            team_data["copilot_usage_data"], key=lambda x: x.get("day", "")
+        )
+
+    return usage_by_team
+
 
 # --- ElasticsearchManager class definition ---
 class ElasticsearchManager:
@@ -1835,16 +2336,56 @@ def get_billing_backfill_window():
     return start_day, end_day
 
 
-def process_ai_credit_usage(github_org_manager, es_manager, data_seat_assignments):
+def process_ai_credit_usage(
+    github_org_manager,
+    es_manager,
+    data_seat_assignments,
+):
     start_day, end_day = get_billing_backfill_window()
     logger.info("Processing AI credit usage backfill")
     raw_records, user_daily_records = github_org_manager.get_ai_credit_usage_backfill(
-        start_day, end_day, seat_assignments=data_seat_assignments
+        start_day,
+        end_day,
+        seat_assignments=data_seat_assignments,
     )
     for record in raw_records:
         es_manager.write_to_es(Indexes.index_ai_credit_usage, record)
     for record in user_daily_records:
         es_manager.write_to_es(Indexes.index_ai_credit_user_daily, record)
+
+
+def process_token_usage(
+    github_org_manager,
+    es_manager,
+    data_seat_assignments,
+    user_metrics_data,
+):
+    start_day, end_day = get_billing_backfill_window()
+    logger.info("Processing token usage from user metrics")
+    raw_records, user_daily_records = build_token_usage_records_from_user_metrics(
+        user_metrics_data,
+        data_seat_assignments,
+        start_day,
+        end_day,
+        github_org_manager.organization_slug,
+        github_org_manager.scope_type,
+        github_org_manager.slug_type,
+    )
+    logger.info(
+        f"Built {len(raw_records)} token usage records and {len(user_daily_records)} user daily token records"
+    )
+    dict_save_to_json_file(
+        raw_records,
+        f"{github_org_manager.organization_slug}_token_usage",
+    )
+    dict_save_to_json_file(
+        user_daily_records,
+        f"{github_org_manager.organization_slug}_token_user_daily",
+    )
+    for record in raw_records:
+        es_manager.write_to_es(Indexes.index_token_usage, record)
+    for record in user_daily_records:
+        es_manager.write_to_es(Indexes.index_token_user_daily, record)
 
 
 def main(organization_slug):
@@ -1901,8 +2442,6 @@ def main(organization_slug):
             )
         logger.info(f"Data processing completed for {slug_type}: {organization_slug}")
 
-    process_ai_credit_usage(github_org_manager, es_manager, data_seat_assignments)
-
     # Build a lookup of user_login -> assignee_team_slug for enriching user metrics
     user_team_lookup = {}
     if data_seat_assignments:
@@ -1917,6 +2456,7 @@ def main(organization_slug):
     logger.info(
         f"Processing Copilot user metrics for {slug_type}: {organization_slug}"
     )
+    user_metrics_data = []
     try:
         logger.info("Calling get_copilot_user_metrics()...")
         user_metrics_data = github_org_manager.get_copilot_user_metrics()
@@ -1951,6 +2491,19 @@ def main(organization_slug):
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
 
+    process_ai_credit_usage(
+        github_org_manager,
+        es_manager,
+        data_seat_assignments,
+    )
+
+    process_token_usage(
+        github_org_manager,
+        es_manager,
+        data_seat_assignments,
+        user_metrics_data,
+    )
+
     # Create user summaries with aggregated top_model/language/feature
     try:
         logger.info("Creating user summaries with aggregated top values...")
@@ -1974,6 +2527,21 @@ def main(organization_slug):
 
     # Process usage data
     copilot_usage_datas = github_org_manager.get_copilot_usages(team_slug="all")
+    if not any(
+        team_data.get("copilot_usage_data") for team_data in copilot_usage_datas.values()
+    ):
+        logger.warning(
+            "Legacy Copilot usage metrics endpoint returned no data; synthesizing usage breakdown from user metrics."
+        )
+        synthesized_usage = build_usage_from_user_metrics(
+            user_metrics_data, organization_slug, github_org_manager.teams
+        )
+        if synthesized_usage:
+            copilot_usage_datas = synthesized_usage
+            logger.info(
+                f"Built synthesized usage data for {len(copilot_usage_datas)} teams from user metrics"
+            )
+
     logger.info(f"Processing Copilot usage data for {slug_type}: {organization_slug}")
     for team_slug, data_with_position in copilot_usage_datas.items():
         logger.info(f"Processing Copilot usage data for team: {team_slug}")
