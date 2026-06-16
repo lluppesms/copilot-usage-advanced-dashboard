@@ -7527,14 +7527,6 @@
                 "alias": "",
                 "bucketAggs": [
                   {
-                    "field": "day",
-                    "id": "2",
-                    "settings": {
-                      "calendar_interval": "day"
-                    },
-                    "type": "date_histogram"
-                  },
-                  {
                     "field": "user_login",
                     "id": "3",
                     "settings": {
@@ -7544,6 +7536,14 @@
                       "size": "100"
                     },
                     "type": "terms"
+                  },
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "interval": "1d"
+                    },
+                    "type": "date_histogram"
                   }
                 ],
                 "datasource": {
@@ -8378,14 +8378,6 @@
                 "alias": "",
                 "bucketAggs": [
                   {
-                    "field": "day",
-                    "id": "2",
-                    "settings": {
-                      "calendar_interval": "day"
-                    },
-                    "type": "date_histogram"
-                  },
-                  {
                     "field": "user_login",
                     "id": "3",
                     "settings": {
@@ -8395,6 +8387,14 @@
                       "size": "100"
                     },
                     "type": "terms"
+                  },
+                  {
+                    "field": "day",
+                    "id": "2",
+                    "settings": {
+                      "interval": "1d"
+                    },
+                    "type": "date_histogram"
                   }
                 ],
                 "datasource": {
