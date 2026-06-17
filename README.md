@@ -10,8 +10,13 @@
 
 > ⚠️**Disclaimer**: This project is open sourced to solve problems that are critical to some users, and the functions provided may not be natively provided by GitHub Copilot. Therefore the contents,  opinions and views expressed in this project are solely mine do not necessarly refect the views of my employer, These are my personal notes based on myunderstanding of the code and trial deployments to GitHub Copilot. If anything is wrong with this article, please let me know through the [issues][repo-issues]. l appreciate your help in correcting my understanding.
 
-> ✅**Risk Warning**: This project uses the standard Copilot REST API to obtain data, aggregate data, and visualize it, without any potential risks.
+> ✅ **Risk Warning**: This project uses the standard Copilot REST API to obtain data, aggregate data, and visualize it, without any potential risks.
 
+---
+
+> 🛑 **Warning!** June 16 (lluppes) - I added Token Usage and AI Credit info to the dashboards, but I'm not sure if the data is accurate, so I suggest you take a cautious attitude towards these two parts for the time being. It's showing data, but it seems to be incomplete. I will continue to verify the data and optimize the visualization of these two parts in the future.
+
+---
 
 <!-- [Copilot Usage Advanced Dashboard 教程](https://www.wolai.com/tNxKtCqCfb6DR2cuaxmJDZ) -->
 
