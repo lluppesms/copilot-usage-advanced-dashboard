@@ -348,6 +348,10 @@ def add_grafana_data_sources(grafana_token, max_retries=3, retry_interval=5):
                 "INDEX_TOKEN_USER_DAILY", "copilot_token_user_daily"
             ),
         },
+        {
+            "name": "elasticsearch-model-auto-usage",
+            "index": os.getenv("INDEX_MODEL_AUTO_USAGE", "copilot_model_auto_usage"),
+        },
     ]
 
     # Template for the payload
@@ -442,6 +446,7 @@ def generate_grafana_model(grafana_token):
         "elasticsearch-ai-credit-user-daily",
         "elasticsearch-token-usage",
         "elasticsearch-token-user-daily",
+        "elasticsearch-model-auto-usage",
     ]
 
 

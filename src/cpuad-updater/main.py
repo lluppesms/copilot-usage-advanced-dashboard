@@ -139,7 +139,9 @@ class Indexes:
         "INDEX_TOKEN_USER_DAILY", "copilot_token_user_daily"
     )
 
-
+    index_model_auto_usage = os.getenv(
+        "INDEX_MODEL_AUTO_USAGE", "copilot_model_auto_usage"
+    )
 logger = configure_logger(log_path=Paras.log_path)
 logger.info("-----------------Starting-----------------")
 
@@ -2388,6 +2390,86 @@ def process_token_usage(
         es_manager.write_to_es(Indexes.index_token_user_daily, record)
 
 
+def build_model_auto_usage_records(
+    user_metrics_data,
+    scope_slug,
+    scope_type,
+    slug_type,
+):
+    """Build per-user/day records for auto model usage share from chat model metrics."""
+    records = []
+    for record in user_metrics_data or []:
+        day_str = record.get("day")
+        user_login = record.get("user_login")
+        if not day_str or not user_login:
+            continue
+
+        auto_count = 0
+        total_count = 0
+        for entry in record.get("totals_by_model_feature", []):
+            model = entry.get("model", "")
+            interaction_count = int(
+                (entry.get("user_initiated_interaction_count", 0) or 0)
+                + (entry.get("code_generation_activity_count", 0) or 0)
+            )
+            if interaction_count <= 0:
+                continue
+            total_count += interaction_count
+            if str(model).lower() == "auto":
+                auto_count += interaction_count
+
+        if total_count <= 0:
+            continue
+
+        specific_count = total_count - auto_count
+        auto_pct = round(auto_count / total_count * 100, 2)
+
+        rec = {
+            "day": day_str,
+            "organization_slug": scope_slug,
+            "member_organization_slug": record.get("organization_slug") or scope_slug,
+            "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+            "scope_slug": scope_slug,
+            "scope_type": scope_type,
+            "slug_type": slug_type,
+            "user_login": user_login,
+            "user_id": record.get("user_id"),
+            "assignee_team_slug": record.get("assignee_team_slug", "no-team"),
+            "auto_interactions": auto_count,
+            "specific_model_interactions": specific_count,
+            "total_model_interactions": total_count,
+            "auto_pct": auto_pct,
+        }
+        rec["unique_hash"] = generate_unique_hash(
+            rec,
+            key_properties=["scope_slug", "day", "user_login"],
+        )
+        records.append(rec)
+
+    return records
+
+
+def process_model_auto_usage(
+    github_org_manager,
+    es_manager,
+    user_metrics_data,
+):
+    logger.info("Processing model auto usage from user metrics")
+    records = build_model_auto_usage_records(
+        user_metrics_data,
+        github_org_manager.organization_slug,
+        github_org_manager.scope_type,
+        github_org_manager.slug_type,
+    )
+    logger.info(f"Built {len(records)} model auto usage records")
+    dict_save_to_json_file(
+        records,
+        f"{github_org_manager.organization_slug}_model_auto_usage",
+    )
+    for record in records:
+        es_manager.write_to_es(Indexes.index_model_auto_usage, record)
+
+
 def main(organization_slug):
     logger.info(
         "=========================================================================================================="
@@ -2501,6 +2583,12 @@ def main(organization_slug):
         github_org_manager,
         es_manager,
         data_seat_assignments,
+        user_metrics_data,
+    )
+
+    process_model_auto_usage(
+        github_org_manager,
+        es_manager,
         user_metrics_data,
     )
 

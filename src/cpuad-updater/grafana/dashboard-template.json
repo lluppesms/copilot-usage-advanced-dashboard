@@ -60,7 +60,7 @@
           "h": 1,
           "w": 24,
           "x": 0,
-          "y": 1
+          "y": 25
         },
         "id": 45,
         "panels": [
@@ -6780,7 +6780,7 @@
           "h": 1,
           "w": 24,
           "x": 0,
-          "y": 25
+          "y": 24
         },
         "id": 110,
         "panels": [
@@ -7587,7 +7587,7 @@
           "h": 1,
           "w": 24,
           "x": 0,
-          "y": 26
+          "y": 23
         },
         "id": 210,
         "panels": [
@@ -7674,7 +7674,7 @@
                 "timeField": "day"
               }
             ],
-            "title": "Total Tokens (Millions)",
+            "title": "Total Tokens (M)",
             "type": "stat"
           },
           {
@@ -7759,7 +7759,7 @@
                 "timeField": "day"
               }
             ],
-            "title": "Active Token Users",
+            "title": "Active Users",
             "type": "stat"
           },
           {
@@ -7887,7 +7887,7 @@
                 "type": "math"
               }
             ],
-            "title": "Avg Tokens per Active User (M)",
+            "title": "Avg Tokens per User (M)",
             "type": "stat"
           },
           {
@@ -8010,7 +8010,7 @@
                 "timeField": "day"
               }
             ],
-            "title": "Daily Token Usage Trend",
+            "title": "Daily Token Usage",
             "type": "timeseries"
           },
           {
@@ -8106,7 +8106,7 @@
                 "timeField": "day"
               }
             ],
-            "title": "Tokens by Model",
+            "title": "Token Usage by Model",
             "type": "piechart"
           },
           {
@@ -8210,7 +8210,7 @@
                 "timeField": "day"
               }
             ],
-            "title": "Top Users by Tokens",
+            "title": "Tokens by User",
             "type": "barchart"
           },
           {
@@ -8304,7 +8304,7 @@
                 "timeField": "day"
               }
             ],
-            "title": "Tokens by Model (Millions)",
+            "title": "Tokens Usage by Model (M)",
             "transformations": [
               {
                 "id": "organize",
@@ -8430,7 +8430,7 @@
                 "timeField": "day"
               }
             ],
-            "title": "Token Usage by User by Day",
+            "title": "User Tokens by Day",
             "transformations": [
               {
                 "id": "organize",
@@ -8439,6 +8439,116 @@
                     "user_login": "User",
                     "day": "Day",
                     "Sum of token_total_million": "Tokens (M)"
+                  }
+                }
+              }
+            ],
+            "type": "table"
+          },
+          {
+            "datasource": {
+              "type": "elasticsearch",
+              "uid": "elasticsearch-model-auto-usage-uid"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "align": "auto",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "inspect": false
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 24,
+              "x": 0,
+              "y": 60
+            },
+            "id": 219,
+            "options": {
+              "footer": {
+                "countRows": false,
+                "fields": "",
+                "reducer": [
+                  "sum"
+                ],
+                "show": false
+              },
+              "showHeader": true
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+              {
+                "alias": "",
+                "bucketAggs": [
+                  {
+                    "field": "user_login",
+                    "id": "2",
+                    "settings": {
+                      "min_doc_count": "1",
+                      "order": "desc",
+                      "orderBy": "1",
+                      "size": "200"
+                    },
+                    "type": "terms"
+                  }
+                ],
+                "datasource": {
+                  "type": "elasticsearch",
+                  "uid": "elasticsearch-model-auto-usage-uid"
+                },
+                "metrics": [
+                  {
+                    "field": "auto_interactions",
+                    "id": "1",
+                    "type": "sum"
+                  },
+                  {
+                    "field": "specific_model_interactions",
+                    "id": "3",
+                    "type": "sum"
+                  },
+                  {
+                    "field": "total_model_interactions",
+                    "id": "4",
+                    "type": "sum"
+                  }
+                ],
+                "query": "organization_slug: $organization_name AND assignee_team_slug:(${assignee_team_name:lucene}) AND user_login:(${assignee_login:lucene})",
+                "refId": "A",
+                "timeField": "day"
+              }
+            ],
+            "title": "Auto Mode Usage",
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {
+                    "Sum specific_model_interactions": true
+                  },
+                  "renameByName": {
+                    "user_login": "User",
+                    "Sum auto_interactions": "Auto Mode",
+                    "Sum total_model_interactions": "Total Interactions"
                   }
                 }
               }
@@ -8732,6 +8842,12 @@
         "type": "datasource",
         "pluginId": "elasticsearch",
         "value": "elasticsearch-token-user-daily-uid"
+      },
+      {
+        "name": "elasticsearch-model-auto-usage",
+        "type": "datasource",
+        "pluginId": "elasticsearch",
+        "value": "elasticsearch-model-auto-usage-uid"
       }
     ],
     "description": "For tutorials and feedback, visit the repo Copilot Usage Advanced Dashboard."
