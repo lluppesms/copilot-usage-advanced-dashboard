@@ -1,3 +1,5 @@
+import csv
+import io
 import json
 import requests
 import os
@@ -264,9 +266,10 @@ def extract_id(entity):
 
 
 def normalize_billing_usage_item(
-    item, day_value, scope_slug, scope_type, slug_type, item_index
+    item, day_value, scope_slug, scope_type, slug_type, item_index,
+    user_login_override=None,
 ):
-    user_login = (
+    user_login = user_login_override or (
         extract_login(item.get("user"))
         or item.get("user_login")
         or item.get("userName")
@@ -279,6 +282,9 @@ def normalize_billing_usage_item(
     )
     if scope_type == "organization":
         member_organization_slug = member_organization_slug or scope_slug
+
+    gross_quantity = item.get("grossQuantity", 0) or 0
+    gross_amount = item.get("grossAmount", 0) or 0
 
     normalized = {
         "day": day_value.isoformat(),
@@ -297,16 +303,126 @@ def normalize_billing_usage_item(
         "model": item.get("model"),
         "unit_type": item.get("unitType") or item.get("unit_type"),
         "price_per_unit": item.get("pricePerUnit"),
-        "gross_quantity": item.get("grossQuantity", 0),
-        "gross_amount": item.get("grossAmount", 0),
-        "discount_quantity": item.get("discountQuantity", 0),
-        "discount_amount": item.get("discountAmount", 0),
-        "net_quantity": item.get("netQuantity", 0),
-        "net_amount": item.get("netAmount", 0),
-        "quantity_raw": item.get("netQuantity", item.get("grossQuantity", 0)),
-        "ai_credits_gross": item.get("grossQuantity", 0),
-        "ai_credits_discount": item.get("discountQuantity", 0),
-        "ai_credits_net": item.get("netQuantity", 0),
+        "gross_quantity": gross_quantity,
+        "gross_amount": gross_amount,
+        # Billing discounts/net are intentionally ignored; gross is treated as usage.
+        "discount_quantity": 0,
+        "discount_amount": 0,
+        "net_quantity": gross_quantity,
+        "net_amount": gross_amount,
+        "quantity_raw": gross_quantity,
+        "ai_credits_gross": gross_quantity,
+        "ai_credits_discount": 0,
+        "ai_credits_net": gross_quantity,
+        "raw_item_index": item_index,
+    }
+    normalized["unique_hash"] = generate_unique_hash(
+        normalized,
+        key_properties=[
+            "scope_slug",
+            "day",
+            "user_login",
+            "member_organization_slug",
+            "product",
+            "sku",
+            "model",
+            "unit_type",
+            "raw_item_index",
+        ],
+    )
+    return normalized
+
+
+def _csv_lookup(row, *keys):
+    """Return the first non-empty value among the given CSV column names.
+
+    GitHub's report CSVs vary slightly in column casing/snake-vs-camel; this
+    helper makes the parser tolerant of those variations.
+    """
+    for key in keys:
+        if key in row and row[key] not in (None, ""):
+            return row[key]
+        # Also try a lower/strip variant for robustness
+        for actual_key in row.keys():
+            if actual_key and actual_key.strip().lower() == key.lower():
+                value = row[actual_key]
+                if value not in (None, ""):
+                    return value
+    return None
+
+
+def _csv_to_float(value, default=0.0):
+    if value is None or value == "":
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def normalize_csv_ai_credit_row(
+    row, scope_slug, scope_type, slug_type, item_index
+):
+    """Normalize a row from the AI credit usage report CSV export.
+
+    Returns None if the row cannot be parsed (missing date/user are tolerated
+    but produce records with those fields set to None). Field names accommodate
+    both snake_case and camelCase variants observed in GitHub's exports.
+    """
+    date_str = _csv_lookup(row, "date", "usage_date", "day")
+    day_value = parse_iso_date(date_str) if date_str else None
+    if not day_value:
+        return None
+
+    user_login = _csv_lookup(
+        row, "user", "username", "user_login", "userName"
+    )
+    member_organization_slug = _csv_lookup(
+        row,
+        "organization",
+        "organization_name",
+        "organizationName",
+        "organization_slug",
+    )
+    if scope_type == "organization":
+        member_organization_slug = member_organization_slug or scope_slug
+
+    gross_quantity = _csv_to_float(
+        _csv_lookup(row, "gross_quantity", "grossQuantity", "quantity")
+    )
+    gross_amount = _csv_to_float(
+        _csv_lookup(row, "gross_amount", "grossAmount")
+    )
+
+    normalized = {
+        "day": day_value.isoformat(),
+        "organization_slug": scope_slug,
+        "member_organization_slug": member_organization_slug,
+        "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+        "scope_slug": scope_slug,
+        "scope_type": scope_type,
+        "slug_type": slug_type,
+        "user_login": user_login,
+        "user_id": None,
+        "member_organization_id": None,
+        "product": _csv_lookup(row, "product"),
+        "sku": _csv_lookup(row, "sku"),
+        "model": _csv_lookup(row, "model"),
+        "unit_type": _csv_lookup(row, "unit_type", "unitType"),
+        "price_per_unit": _csv_to_float(
+            _csv_lookup(row, "price_per_unit", "pricePerUnit"), default=None
+        ),
+        "gross_quantity": gross_quantity,
+        "gross_amount": gross_amount,
+        # Billing discounts/net are intentionally ignored; gross is treated as usage.
+        "discount_quantity": 0,
+        "discount_amount": 0,
+        "net_quantity": gross_quantity,
+        "net_amount": gross_amount,
+        "quantity_raw": gross_quantity,
+        "ai_credits_gross": gross_quantity,
+        "ai_credits_discount": 0,
+        "ai_credits_net": gross_quantity,
         "raw_item_index": item_index,
     }
     normalized["unique_hash"] = generate_unique_hash(
@@ -1727,31 +1843,45 @@ class GitHubOrganizationManager:
     def get_ai_credit_usage_backfill(
         self, start_day, end_day, seat_assignments=None, save_to_json=True
     ):
+        """Fetch AI credit usage for the configured scope.
+
+        Per-user attribution availability depends on scope and PAT scope:
+
+        - **Enterprise scope** (with `manage_billing:enterprise` PAT): the
+          async usage-report export endpoint returns per-user-per-day CSV
+          data. One job covers ALL users x ALL days, scaling to thousands
+          of users without burning rate limits.
+        - **Organization scope** (org admin PAT): GitHub does NOT return
+          user attribution for enterprise-owned organizations. The
+          per-user filter (`?user=USERNAME`) returns HTTP 403:
+          "Organization admins for enterprise owned organizations
+          cannot filter usage by user". We fall back to the org-aggregate
+          call (no user filter), which gives accurate totals per
+          day/model/SKU/product but leaves `user_login` empty. The
+          per-user daily index will therefore contain zeros for every
+          seat assignee — surface aggregate panels in Grafana instead.
+
+        To enable per-user attribution for an enterprise-owned org,
+        provide a PAT with `manage_billing:enterprise` and set
+        SCOPE_TYPE=enterprise + the enterprise slug.
+        """
         raw_records = []
-        scope_segment = get_billing_api_segment(self.scope_type)
-        for day_value in iter_days(start_day, end_day):
-            url = (
-                f"https://api.github.com/{scope_segment}/{self.organization_slug}"
-                f"/settings/billing/ai_credit/usage?year={day_value.year}"
-                f"&month={day_value.month}&day={day_value.day}"
-            )
-            api_response = github_api_request_handler(url, error_return_value={})
-            usage_items = api_response.get("usageItems", []) if api_response else []
-            logger.info(
-                f"Fetched {len(usage_items)} AI credit usage items for "
-                f"{self.slug_type}: {self.organization_slug} on {day_value.isoformat()}"
-            )
-            for item_index, usage_item in enumerate(usage_items, start=1):
-                raw_records.append(
-                    normalize_billing_usage_item(
-                        usage_item,
-                        day_value,
-                        self.organization_slug,
-                        self.scope_type,
-                        self.slug_type,
-                        item_index,
-                    )
+
+        if self.scope_type in {"enterprise", "standalone"}:
+            try:
+                raw_records = self._fetch_ai_credits_via_report_export(
+                    start_day, end_day
                 )
+            except Exception as exc:
+                logger.warning(
+                    f"AI credit report export failed for {self.slug_type}: "
+                    f"{self.organization_slug}: {exc}. Falling back to "
+                    "org-aggregate (no per-user attribution)."
+                )
+                raw_records = []
+
+        if not raw_records:
+            raw_records = self._fetch_ai_credits_org_aggregate(start_day, end_day)
 
         dict_save_to_json_file(
             raw_records,
@@ -1774,6 +1904,163 @@ class GitHubOrganizationManager:
             save_to_json=save_to_json,
         )
         return raw_records, user_daily_records
+
+    def _fetch_ai_credits_org_aggregate(self, start_day, end_day):
+        """Pull org-aggregate AI credit usage (no per-user attribution).
+
+        Used for org-scope accounts where GitHub blocks per-user filtering
+        (enterprise-owned orgs) or as a fallback when the enterprise
+        report export fails. Returns line items with `user_login` empty
+        but accurate totals per model/SKU/product/day.
+        """
+        raw_records = []
+        scope_segment = get_billing_api_segment(self.scope_type)
+        for day_value in iter_days(start_day, end_day):
+            url = (
+                f"https://api.github.com/{scope_segment}/{self.organization_slug}"
+                f"/settings/billing/ai_credit/usage?year={day_value.year}"
+                f"&month={day_value.month}&day={day_value.day}"
+            )
+            api_response = github_api_request_handler(url, error_return_value={})
+            usage_items = api_response.get("usageItems", []) if api_response else []
+            for item_index, usage_item in enumerate(usage_items, start=1):
+                raw_records.append(
+                    normalize_billing_usage_item(
+                        usage_item,
+                        day_value,
+                        self.organization_slug,
+                        self.scope_type,
+                        self.slug_type,
+                        item_index,
+                    )
+                )
+            logger.info(
+                f"Fetched {len(usage_items)} AI credit usage items "
+                f"(org-aggregate) for {self.slug_type}: "
+                f"{self.organization_slug} on {day_value.isoformat()}"
+            )
+        return raw_records
+
+    def _fetch_ai_credits_via_report_export(self, start_day, end_day):
+        """Use the enterprise async usage report export to get per-user-per-day data.
+
+        Workflow:
+          1. POST /enterprises/{ent}/settings/billing/reports with
+             report_type=ai_credit and the date range.
+          2. Poll GET /enterprises/{ent}/settings/billing/reports/{id} until
+             status=completed (or fail/timeout).
+          3. Download each CSV in download_urls and parse rows into normalized
+             records using normalize_csv_ai_credit_row.
+        """
+        base = (
+            f"https://api.github.com/enterprises/{self.organization_slug}"
+            f"/settings/billing/reports"
+        )
+        body = {
+            "report_type": "ai_credit",
+            "start_date": start_day.isoformat(),
+            "end_date": end_day.isoformat(),
+            "send_email": False,
+        }
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": Paras.github_api_version,
+            "Authorization": f"Bearer {Paras.github_pat}",
+            "Content-Type": "application/json",
+        }
+
+        logger.info(
+            f"Requesting AI credit report export for enterprise "
+            f"{self.organization_slug} from {body['start_date']} to {body['end_date']}"
+        )
+        resp = requests.post(base, headers=headers, json=body, timeout=60)
+        if resp.status_code not in (200, 202):
+            raise RuntimeError(
+                f"Report export create failed: HTTP {resp.status_code}: "
+                f"{resp.text[:300]}"
+            )
+        report = resp.json()
+        report_id = report.get("id")
+        if not report_id:
+            raise RuntimeError(f"No report id in response: {report}")
+
+        # Poll until completed
+        poll_url = f"{base}/{report_id}"
+        max_wait_seconds = int(os.getenv("AI_CREDIT_REPORT_TIMEOUT", "600"))
+        poll_interval_seconds = int(os.getenv("AI_CREDIT_REPORT_POLL_INTERVAL", "10"))
+        deadline = time.time() + max_wait_seconds
+        download_urls = []
+        while time.time() < deadline:
+            status_resp = requests.get(poll_url, headers=headers, timeout=60)
+            if status_resp.status_code != 200:
+                raise RuntimeError(
+                    f"Report poll failed: HTTP {status_resp.status_code}: "
+                    f"{status_resp.text[:300]}"
+                )
+            status_data = status_resp.json()
+            status = status_data.get("status")
+            if status == "completed":
+                download_urls = status_data.get("download_urls") or []
+                logger.info(
+                    f"AI credit report {report_id} completed with "
+                    f"{len(download_urls)} download URL(s)"
+                )
+                break
+            if status == "failed":
+                raise RuntimeError(f"Report export reported failed status: {status_data}")
+            logger.info(
+                f"AI credit report {report_id} status={status}, sleeping "
+                f"{poll_interval_seconds}s..."
+            )
+            time.sleep(poll_interval_seconds)
+        else:
+            raise RuntimeError(
+                f"AI credit report {report_id} did not complete within "
+                f"{max_wait_seconds}s"
+            )
+
+        if not download_urls:
+            raise RuntimeError("Report completed but returned no download URLs")
+
+        # Download and parse CSVs
+        raw_records = []
+        item_index = 0
+        # Do NOT send Authorization header to the download URL (often signed blob URL)
+        download_headers = {"Accept": "text/csv"}
+        for url_idx, dl_url in enumerate(download_urls, start=1):
+            logger.info(
+                f"Downloading AI credit report CSV {url_idx}/{len(download_urls)}"
+            )
+            dl_resp = requests.get(dl_url, headers=download_headers, timeout=120)
+            if dl_resp.status_code != 200:
+                logger.error(
+                    f"Download URL {url_idx} failed: HTTP {dl_resp.status_code}"
+                )
+                continue
+            reader = csv.DictReader(io.StringIO(dl_resp.text))
+            row_count = 0
+            for row in reader:
+                normalized = normalize_csv_ai_credit_row(
+                    row,
+                    self.organization_slug,
+                    self.scope_type,
+                    self.slug_type,
+                    item_index + 1,
+                )
+                if normalized is None:
+                    continue
+                item_index += 1
+                raw_records.append(normalized)
+                row_count += 1
+            logger.info(
+                f"Parsed {row_count} AI credit rows from download {url_idx}"
+            )
+
+        logger.info(
+            f"Report export produced {len(raw_records)} per-user AI credit "
+            f"line items for {self.slug_type}: {self.organization_slug}"
+        )
+        return raw_records
 
     def _add_fullpath_slug(self, teams):
         id_to_team = {team["id"]: team for team in teams}

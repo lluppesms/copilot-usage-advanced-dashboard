@@ -14,7 +14,11 @@
 
 ---
 
-> 🛑 **Warning!** June 16 (lluppes) - I added Token Usage and AI Credit info to the dashboards, but I'm not sure if the data is accurate, so I suggest you take a cautious attitude towards these two parts for the time being. It's showing data, but it seems to be incomplete. I will continue to verify the data and optimize the visualization of these two parts in the future.
+## 🛑 WARNING!
+
+> June 16 (lluppes) - I added Token Usage and AI Credit info to the dashboards, but I'm not sure if the data is accurate, so I suggest you take a cautious attitude towards these two parts for the time being. The token usage is showing data, but it seems to be incomplete. That will need to be verified and optimized in the future.
+
+>In order to get real AI Credit usage info, you need to have an enterprise level PAT token to call the billing API, and I don't have access to an enterprise with real data that I can test with so this may have to wait for the future.  See [AI credit per-user attribution](./docs/ai-credits-per-user-attribution.md) for more details.
 
 ---
 
