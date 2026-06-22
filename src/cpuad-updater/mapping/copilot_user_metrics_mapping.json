@@ -52,6 +52,12 @@
       "code_acceptance_activity_count": {
         "type": "long"
       },
+      "ai_credits_used": {
+        "type": "float"
+      },
+      "ai_credits_used_has_data": {
+        "type": "boolean"
+      },
       "used_agent": {
         "type": "boolean"
       },

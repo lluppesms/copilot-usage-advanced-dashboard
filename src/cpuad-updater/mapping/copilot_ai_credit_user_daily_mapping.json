@@ -40,6 +40,15 @@
       "quantity_raw": {
         "type": "double"
       },
+      "ai_credits_used": {
+        "type": "double"
+      },
+      "ai_credits_used_has_data": {
+        "type": "boolean"
+      },
+      "ai_credits_source": {
+        "type": "keyword"
+      },
       "ai_credits_gross": {
         "type": "double"
       },

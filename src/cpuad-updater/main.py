@@ -555,6 +555,89 @@ def build_billing_user_daily_records(
     return list(aggregated.values())
 
 
+def build_ai_credit_user_daily_from_user_metrics(
+    user_metrics_data,
+    scope_slug,
+    scope_type,
+    slug_type,
+):
+    """Build per-user-per-day AI credit records from the user metrics report.
+
+    Source: top-level `ai_credits_used` field on each per-user record from
+    `GET /{scope}/{slug}/copilot/metrics/reports/users-28-day/latest`
+    (added 2026-06-19; api version 2026-03-10).
+
+    Per-user gross consumption as reported by GitHub. No proration, no
+    distribution of org-level totals, no net/billed/discounted math.
+
+    For Grafana compatibility we mirror the value into the legacy
+    `ai_credits_gross` field (existing panels filter on this) and set
+    `ai_credits_net = ai_credits_used` with `ai_credits_discount = 0`,
+    because the changelog states the field is the raw consumption.
+    """
+    records = []
+    skipped = 0
+    for entry in user_metrics_data or []:
+        if not isinstance(entry, dict):
+            skipped += 1
+            continue
+        day_str = entry.get("day")
+        user_login = entry.get("user_login")
+        if not day_str or not user_login:
+            skipped += 1
+            continue
+
+        # `ai_credits_used` is already normalized to float in
+        # get_copilot_user_metrics(); fall back to 0.0 defensively.
+        raw_credits = entry.get("ai_credits_used")
+        try:
+            credits_used = float(raw_credits) if raw_credits is not None else 0.0
+        except (TypeError, ValueError):
+            credits_used = 0.0
+        # Trust the explicit flag set during enrichment in
+        # get_copilot_user_metrics(). True iff GitHub actually populated
+        # `ai_credits_used` on the raw NDJSON record for this user-day.
+        has_credits_data = bool(entry.get("ai_credits_used_has_data", False))
+
+        record = {
+            "day": day_str,
+            "organization_slug": scope_slug,
+            "member_organization_slug": entry.get("organization_slug") or scope_slug,
+            "enterprise_slug": scope_slug if scope_type == "enterprise" else None,
+            "scope_slug": scope_slug,
+            "scope_type": scope_type,
+            "slug_type": slug_type,
+            "user_login": user_login,
+            "user_id": entry.get("user_id"),
+            "member_organization_id": None,
+            "assignee_team_slug": entry.get("assignee_team_slug", "no-team"),
+            "plan_type": None,
+            "quantity_raw": credits_used,
+            "ai_credits_used": credits_used,
+            "ai_credits_used_has_data": has_credits_data,
+            "ai_credits_source": "user_metrics_report",
+            "ai_credits_gross": credits_used,
+            "ai_credits_discount": 0,
+            "ai_credits_net": credits_used,
+            "gross_amount": 0,
+            "discount_amount": 0,
+            "net_amount": 0,
+            "has_usage": credits_used > 0,
+        }
+        record["unique_hash"] = generate_unique_hash(
+            record,
+            key_properties=["scope_slug", "day", "user_login"],
+        )
+        records.append(record)
+
+    if skipped:
+        logger.info(
+            f"build_ai_credit_user_daily_from_user_metrics: skipped {skipped} "
+            "user-metric entries missing day/user_login"
+        )
+    return records
+
+
 def distribute_weighted_int(total, weighted_keys):
     """Distribute an integer total across weighted keys while preserving sums."""
     if total <= 0 or not weighted_keys:
@@ -1797,11 +1880,26 @@ class GitHubOrganizationManager:
                     if isinstance(user_data, dict):
                         # Calculate top values from nested data
                         top_values = calculate_top_values(user_data)
-                        
+
+                        # Explicitly normalize the new per-user AI credits field
+                        # (added by GitHub on 2026-06-19). Missing key means
+                        # GitHub did not report data for this user-day --
+                        # surface that explicitly via `ai_credits_used_has_data`
+                        # rather than silently treating it as 0.
+                        raw_credits = user_data.get("ai_credits_used", None)
+                        has_credits_data = "ai_credits_used" in user_data and raw_credits is not None
+                        try:
+                            credits_used_value = float(raw_credits) if has_credits_data else 0.0
+                        except (TypeError, ValueError):
+                            credits_used_value = 0.0
+                            has_credits_data = False
+
                         # Add organizational context and metadata
                         enriched_user_data = {
                             **user_data,
                             **top_values,  # Add calculated top values
+                            'ai_credits_used': credits_used_value,
+                            'ai_credits_used_has_data': has_credits_data,
                             'organization_slug': self.organization_slug,
                             'slug_type': self.slug_type,
                             'last_updated_at': current_time_str,
@@ -2629,16 +2727,63 @@ def process_ai_credit_usage(
     github_org_manager,
     es_manager,
     data_seat_assignments,
+    user_metrics_data=None,
 ):
     start_day, end_day = get_billing_backfill_window()
     logger.info("Processing AI credit usage backfill")
-    raw_records, user_daily_records = github_org_manager.get_ai_credit_usage_backfill(
+    raw_records, billing_user_daily_records = github_org_manager.get_ai_credit_usage_backfill(
         start_day,
         end_day,
         seat_assignments=data_seat_assignments,
     )
+
+    # The org-billing line-item records (`copilot_ai_credit_usage`) still
+    # carry per-SKU / per-model gross totals and are correct -- write them.
     for record in raw_records:
         es_manager.write_to_es(Indexes.index_ai_credit_usage, record)
+
+    # For the per-user-per-day index we now PREFER the new GitHub field
+    # `ai_credits_used` returned in the users-28-day report (added
+    # 2026-06-19). This is the actual per-user gross consumption reported
+    # by GitHub -- no proration of org-level totals.
+    user_daily_records = billing_user_daily_records
+    if user_metrics_data:
+        api_user_daily_records = build_ai_credit_user_daily_from_user_metrics(
+            user_metrics_data,
+            github_org_manager.organization_slug,
+            github_org_manager.scope_type,
+            github_org_manager.slug_type,
+        )
+        if api_user_daily_records:
+            populated = sum(
+                1 for r in api_user_daily_records if r.get("ai_credits_used_has_data")
+            )
+            total_used = sum(
+                float(r.get("ai_credits_used", 0) or 0) for r in api_user_daily_records
+            )
+            logger.info(
+                f"Using per-user `ai_credits_used` from users-28-day report: "
+                f"{len(api_user_daily_records)} user-day records, "
+                f"{populated} with API-reported values, "
+                f"total gross credits = {total_used:.4f}"
+            )
+            user_daily_records = api_user_daily_records
+            dict_save_to_json_file(
+                user_daily_records,
+                f"{github_org_manager.organization_slug}_ai_credit_user_daily",
+            )
+        else:
+            logger.warning(
+                "user_metrics_data provided but no per-user AI credit "
+                "records were built; falling back to billing-derived records."
+            )
+    else:
+        logger.info(
+            "No user_metrics_data passed to process_ai_credit_usage; "
+            "writing billing-derived per-user records "
+            "(may have zero user attribution for enterprise-owned orgs)."
+        )
+
     for record in user_daily_records:
         es_manager.write_to_es(Indexes.index_ai_credit_user_daily, record)
 
@@ -2864,6 +3009,7 @@ def main(organization_slug):
         github_org_manager,
         es_manager,
         data_seat_assignments,
+        user_metrics_data=user_metrics_data,
     )
 
     process_token_usage(
@@ -3003,8 +3149,21 @@ def process_enterprise_billing(enterprise_slug):
                 update_condition={"is_active_today": 1},
             )
 
+    # Fetch per-user metrics so AI credit per-user attribution can use
+    # the new `ai_credits_used` field from the users-28-day report.
+    enterprise_user_metrics = []
+    try:
+        enterprise_user_metrics = github_enterprise_manager.get_copilot_user_metrics() or []
+    except Exception as exc:
+        logger.warning(
+            f"Failed to fetch user metrics for enterprise {enterprise_slug}: {exc}"
+        )
+
     process_ai_credit_usage(
-        github_enterprise_manager, es_manager, data_seat_assignments
+        github_enterprise_manager,
+        es_manager,
+        data_seat_assignments,
+        user_metrics_data=enterprise_user_metrics,
     )
 
 
